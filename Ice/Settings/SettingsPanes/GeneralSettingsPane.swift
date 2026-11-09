@@ -185,23 +185,7 @@ struct GeneralSettingsPane: View {
 
     @ViewBuilder
     private var displayOptions: some View {
-        ForEach(NSScreen.screens, id: \.displayUUIDString) { screen in
-            if let uuid = screen.displayUUIDString {
-                IcePicker(LocalizedStringKey(screen.localizedName), selection: displayModeBinding(for: uuid)) {
-                    Text("Follow \"Use Trincano Bar\"").tag(DisplayBarMode.followGlobal)
-                    Text("Trincano Bar").tag(DisplayBarMode.bar)
-                    Text("Expand the menu bar").tag(DisplayBarMode.inline)
-                }
-                .annotation("How hidden items are shown on this display.")
-            }
-        }
-    }
-
-    private func displayModeBinding(for uuid: String) -> Binding<DisplayBarMode> {
-        Binding(
-            get: { settings.displayProfiles.mode(for: uuid) },
-            set: { settings.displayProfiles.set($0, for: uuid) }
-        )
+        DisplayMapView(settings: settings)
     }
 
     @ViewBuilder
