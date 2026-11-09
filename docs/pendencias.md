@@ -52,6 +52,9 @@ Veredito do Lupa: PR #1 (3ff4ef9) pode seguir para **uso pessoal**, **não** est
 - UUID ausente (`CGDisplayCreateUUIDFromDisplayID` nil) hoje exclui o display da topologia: usar o `displayID` efêmero para a sessão/recache, sem gravar perfil.
 - UUID duplicado duplica a identidade no `ForEach` do ajuste de Displays: usar ID de runtime na UI e definir uma política para UUID ambíguo; fixtures com UUID nil e duplicado.
 
+## Geral B (rodada de design, PR 2)
+- Mapa de telas só na UI: a pendência 8 acima segue aberta na topologia (UUID nil exclui a tela). Validar ao vivo com monitor externo (roteiro em `docs/rodada-design/README.md`).
+
 ## Fase 6 (acabamento)
 - `IceBarColorManager` (linha ~68) só atualiza a cor quando `screen == .main` (tela do foco do teclado); com monitor externo a Barra do notebook pode não atualizar a cor. Trocar pela tela-alvo.
 - Validar PT-BR ao vivo e VoiceOver com o Paulo; escolher o ícone (ver docs/fase-6-acabamento.md).

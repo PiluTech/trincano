@@ -17,3 +17,18 @@ Canvas: https://claude.ai/artifact/BZG18TuyNFaJoXbjiK6mLi. Escolhas: Barra **B**
 
 ## Prints
 `prints/` (tema escuro, app em inglês; o tema claro exige trocar a aparência do sistema, não feito). A Busca depende de atalho configurado e não foi capturada.
+
+## PR 2: Geral B (mapa de telas)
+- Com 2 ou mais telas, os pickers por tela viram um **mapa** (`DisplayMapView`, modelo puro `DisplayMapModel`, testado): as telas na proporção e no arranjo do sistema, notch desenhado, seleção por clique/VoiceOver (radio com "selecionado"), detalhe com crossfade (`MotionPolicy`, sem movimento com Reduzir movimento). Com 1 tela nada aparece (igual a hoje).
+- **Só o que já é persistido por tela**: `DisplayBarMode` (seguir o geral / Barra / expandir). Os dois toggles de notch do canvas (por tela) **não existem por tela** hoje (são globais) e ficaram como estão, em "Notch": omitidos do mapa, sem campo novo.
+- **Identidade (pendência 8, só na UI)**: a lista usa o `displayID` de runtime. Tela sem UUID, ou com UUID repetido, não ganha perfil (o picker some e aparece o texto "sem identificador estável"; segue o geral). O restante da pendência 8 (topologia que exclui tela sem UUID) continua aberto.
+- **Homônimas**: nome repetido ganha " · 1", " · 2" e "N de M com este nome"; nome vazio vira "Tela N". Nome longo trunca no meio com tooltip e aparece inteiro (2 linhas) no detalhe.
+- Testes: `DisplayMapModelTests` (13 casos: ordem, encaixe, arranjo, tela acima, homônimas, nome vazio, UUID nil/repetido). Vermelho: stub vazio derrubou a suíte; depois a implementação.
+
+### Roteiro ao vivo (precisa de monitor externo)
+1. Conectar um monitor: o mapa aparece com 2 telas na ordem do Ajustes do Sistema; o notch só no Air.
+2. Trocar o modo de cada tela e confirmar que cada uma guarda o seu (reabrir os Ajustes, desconectar/reconectar).
+3. Dois monitores de mesmo modelo: nomes com " · 1"/" · 2".
+4. Desconectar a tela selecionada: a seleção volta para a primeira.
+5. VoiceOver: cada tela é lida com nome, resolução, "com notch" e "selecionado".
+Sem monitor externo não há print do mapa (não foi possível capturar).

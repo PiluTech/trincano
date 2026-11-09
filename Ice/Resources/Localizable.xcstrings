@@ -158,6 +158,23 @@
         }
       }
     },
+    "%lld of %lld with this name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld of %lld with this name"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld de %lld com este nome"
+          }
+        }
+      }
+    },
     "1": {
       "extractionState": "manual",
       "localizations": {
@@ -821,6 +838,23 @@
         }
       }
     },
+    "Display %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Display %lld"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tela %lld"
+          }
+        }
+      }
+    },
     "Display images of individual menu bar items.": {
       "extractionState": "manual",
       "localizations": {
@@ -851,6 +885,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mostra o ícone como imagem monocromática que se ajusta à aparência da barra de menus. Este ajuste remove toda a cor do ícone, mas garante uma exibição consistente em fundos claros e escuros."
+          }
+        }
+      }
+    },
+    "Displays": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Displays"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telas"
           }
         }
       }
@@ -1259,6 +1310,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Escondida"
+          }
+        }
+      }
+    },
+    "Hidden items on this display": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden items on this display"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Itens escondidos nesta tela"
           }
         }
       }
@@ -2963,6 +3031,23 @@
         }
       }
     },
+    "This display has no stable identifier, so it can't keep its own setting. It follows \"Use Trincano Bar\".": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This display has no stable identifier, so it can't keep its own setting. It follows \"Use Trincano Bar\"."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tela não tem identificador estável, então não guarda um ajuste próprio. Ela segue \"Usar a Barra do Trincano\"."
+          }
+        }
+      }
+    },
     "Timed": {
       "extractionState": "manual",
       "localizations": {
@@ -3435,6 +3520,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Visível"
+          }
+        }
+      }
+    },
+    "With notch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With notch"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Com notch"
           }
         }
       }
