@@ -39,17 +39,12 @@ enum TemporarySlotPlan<Tag: Equatable> {
 /// operation that ran past its deadline).
 ///
 /// Cancellation only decides whether to *start* work (a move) or to *click*.
-/// A move that finished is always registered: the item is out of its place and
-/// only the registered context lets the rehide timer send it back.
+/// A move that finished is always registered (`afterMove`): the item is out of
+/// its place and only the registered context lets the rehide timer send it back.
 enum TemporaryShowCancellation {
     /// Whether to start moving the item into the slot.
     static func startsMove(cancelled: Bool) -> Bool {
         !cancelled
-    }
-
-    /// Whether to register the context after a move that succeeded. Always.
-    static func registersContext(afterSuccessfulMove cancelled: Bool) -> Bool {
-        true
     }
 
     /// What to do once the move into the slot is over. The move itself runs

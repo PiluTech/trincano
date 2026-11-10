@@ -220,11 +220,6 @@ struct TemporaryShowCancellationTests {
         #expect(TemporaryShowCancellation.startsMove(cancelled: false))
     }
 
-    @Test func aMoveThatFinishedIsRegisteredEvenWhenCancelled() {
-        #expect(TemporaryShowCancellation.registersContext(afterSuccessfulMove: true))
-        #expect(TemporaryShowCancellation.registersContext(afterSuccessfulMove: false))
-    }
-
     @Test func cancelledDuringTheMoveStillRegistersAndOnlySkipsTheClick() {
         #expect(TemporaryShowCancellation.afterMove(succeeded: true, cancelled: true) == .registerOnly)
         #expect(TemporaryShowCancellation.afterMove(succeeded: true, cancelled: false) == .registerAndClick)
@@ -243,7 +238,7 @@ struct TemporaryShowCancellationTests {
         var shown = [String]()
         if TemporaryShowCancellation.startsMove(cancelled: false) {
             // move done; cancelled now
-            if TemporaryShowCancellation.registersContext(afterSuccessfulMove: true) {
+            if TemporaryShowCancellation.afterMove(succeeded: true, cancelled: true) != .giveUp {
                 shown.append("A")
             }
         }
