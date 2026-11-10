@@ -63,4 +63,10 @@ enum AXHelpers {
     static func role(for element: UIElement) -> Role? {
         queue.sync { try? element.role() }
     }
+
+    /// The raw `AXRole` string, for roles AXSwift's ``Role`` doesn't list
+    /// (such as `AXMenuBarItem`).
+    static func roleName(for element: UIElement) -> String? {
+        queue.sync { try? element.attribute(.role) }
+    }
 }

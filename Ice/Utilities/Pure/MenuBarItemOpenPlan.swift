@@ -20,6 +20,23 @@ enum MenuBarItemOpenPlan {
         case moveAndClick
     }
 
+    /// The result of an Accessibility press.
+    enum PressOutcome: Equatable {
+        case pressed
+        /// Nothing was pressed (no matching element, or the action is refused).
+        case unavailable
+        /// The call timed out: the press may have gone through, so clicking
+        /// again could open the menu twice.
+        case uncertain
+
+        var fallsBackToClick: Bool { self == .unavailable }
+    }
+
+    /// Only an enabled `AXMenuBarItem` is pressed.
+    static func isPressable(isMenuBarItem: Bool, isEnabled: Bool) -> Bool {
+        isMenuBarItem && isEnabled
+    }
+
     static func strategy(isOnScreen: Bool, isLeftButton: Bool) -> Strategy {
         guard isOnScreen else {
             return .moveAndClick
