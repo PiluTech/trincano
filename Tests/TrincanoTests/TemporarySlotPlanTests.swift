@@ -115,45 +115,90 @@ struct SerialAsyncQueueTests {
         let queue = SerialAsyncQueue()
         let log = Log()
 
-        async let first: Void = queue.run {
-            log.add("A start")
-            await Task.yield()
-            await Task.yield()
-            log.add("A end")
+        // `async let` doesn't promise a start order; main-actor Tasks do.
+        let first = Task { @MainActor in
+            await queue.run {
+                log.add("A start")
+                await Task.yield()
+                await Task.yield()
+                log.add("A end")
+            }
         }
-        async let second: Void = queue.run {
-            log.add("B start")
-            await Task.yield()
-            log.add("B end")
+        let second = Task { @MainActor in
+            await queue.run {
+                log.add("B start")
+                await Task.yield()
+                log.add("B end")
+            }
         }
-        _ = await (first, second)
+        _ = await (first.value, second.value)
 
         #expect(log.entries == ["A start", "A end", "B start", "B end"])
     }
 
-    @Test func aStuckOperationDoesNotBlockTheNextOne() async {
+    @Test func aStuckOperationIsCancelledAndDoesNotBlockTheNextOne() async {
+        // The deadline is a manual gate, not a sleep: no wall-clock time.
+        let gate = Gate()
         var timeouts = 0
-        let queue = SerialAsyncQueue(timeout: .milliseconds(50), onTimeout: { timeouts += 1 })
+        let queue = SerialAsyncQueue(
+            timeout: .seconds(5),
+            onTimeout: { timeouts += 1 },
+            sleep: { _ in
+                while !Task.isCancelled, !(await gate.isOpen) {
+                    await Task.yield()
+                }
+            }
+        )
         let log = Log()
 
-        async let stuck: Void = queue.run {
-            log.add("stuck start")
-            try? await Task.sleep(for: .milliseconds(400))
-            log.add("stuck end")
+        let stuck = Task { @MainActor in
+            await queue.run {
+                log.add("stuck start")
+                while !Task.isCancelled {
+                    await Task.yield()
+                }
+                log.add("stuck cancelled")
+            }
         }
-        async let next: Void = queue.run {
-            log.add("next")
+        // Submit "next" only once "stuck" is running: the order is certain.
+        while !log.entries.contains("stuck start") {
+            await Task.yield()
         }
-        _ = await (stuck, next)
+        let next = Task { @MainActor in
+            await queue.run {
+                log.add("next")
+            }
+        }
+        await gate.open()
+        _ = await (stuck.value, next.value)
 
-        #expect(log.entries == ["stuck start", "next", "stuck end"])
+        #expect(log.entries.first == "stuck start")
+        #expect(Set(log.entries) == ["stuck start", "stuck cancelled", "next"])
         #expect(timeouts == 1)
+    }
+
+    @Test func anOperationThatFinishesInTimeIsNotCancelled() async {
+        var timeouts = 0
+        let queue = SerialAsyncQueue(onTimeout: { timeouts += 1 }, sleep: { _ in
+            // Never reaches the deadline; ends when the queue cancels the timer.
+            while !Task.isCancelled {
+                await Task.yield()
+            }
+        })
+        let wasCancelled = await queue.run { Task.isCancelled }
+        #expect(!wasCancelled)
+        #expect(timeouts == 0)
     }
 
     @Test func runsInSubmissionOrderAndReturnsTheValue() async {
         let queue = SerialAsyncQueue()
         let value = await queue.run { 42 }
         #expect(value == 42)
+    }
+
+    actor Gate {
+        private(set) var isOpen = false
+        func open() { isOpen = true }
     }
 
     @MainActor

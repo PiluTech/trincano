@@ -1529,6 +1529,14 @@ extension MenuBarItemManager {
             return
         }
 
+        // The queue cancels an operation that ran past its deadline, and the
+        // next one may already be planning with the slot empty: registering
+        // the context now would bring the interleaving back.
+        guard !Task.isCancelled else {
+            logger.warning("Operation ran past its deadline, so not registering \(item.logString, privacy: .public)")
+            return
+        }
+
         let context = TemporarilyShownItemContext(tag: item.tag, returnDestination: destination)
         temporarilyShownItemContexts.append(context)
 
@@ -1542,8 +1550,8 @@ extension MenuBarItemManager {
 
         // The item may have been sent back while it was moving (another
         // click, or the rehide timer): don't click an item that is hidden again.
-        guard temporarilyShownItemContexts.contains(where: { $0 === context }) else {
-            logger.debug("Item was returned before the click, so not clicking \(item.logString, privacy: .public)")
+        guard !Task.isCancelled, temporarilyShownItemContexts.contains(where: { $0 === context }) else {
+            logger.debug("Item was returned (or the operation cancelled) before the click, so not clicking \(item.logString, privacy: .public)")
             return
         }
 
