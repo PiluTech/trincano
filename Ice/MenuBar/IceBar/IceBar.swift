@@ -482,11 +482,7 @@ struct IceBarItemView: View {
             menuBarManager.section(withName: section)?.hide()
             Task {
                 try await Task.sleep(for: .milliseconds(25))
-                if Bridging.isWindowOnScreen(item.windowID) {
-                    try await itemManager.click(item: item, with: .left)
-                } else {
-                    await itemManager.temporarilyShow(item: item, clickingWith: .left)
-                }
+                await itemManager.open(item: item, with: .left)
             }
         }
     }
@@ -499,11 +495,7 @@ struct IceBarItemView: View {
             menuBarManager.section(withName: section)?.hide()
             Task {
                 try await Task.sleep(for: .milliseconds(25))
-                if Bridging.isWindowOnScreen(item.windowID) {
-                    try await itemManager.click(item: item, with: .right)
-                } else {
-                    await itemManager.temporarilyShow(item: item, clickingWith: .right)
-                }
+                await itemManager.open(item: item, with: .right)
             }
         }
     }

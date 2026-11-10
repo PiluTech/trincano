@@ -33,6 +33,9 @@ final class MenuBarItemManager: ObservableObject {
     /// A timer for rehiding temporarily shown menu bar items.
     private var rehideTimer: Timer?
 
+    /// Runs the clicks of the Trincano Bar one at a time.
+    let openQueue = SerialAsyncQueue()
+
     /// Timestamp of the most recent menu bar item move operation.
     private var lastMoveOperationTimestamp: ContinuousClock.Instant?
 
@@ -1531,6 +1534,13 @@ extension MenuBarItemManager {
         await eventSleep(for: .milliseconds(100))
         let idsBeforeClick = Set(Bridging.getWindowList(option: .onScreen))
 
+        // The item may have been sent back while it was moving (another
+        // click, or the rehide timer): don't click an item that is hidden again.
+        guard temporarilyShownItemContexts.contains(where: { $0 === context }) else {
+            logger.debug("Item was returned before the click, so not clicking \(item.logString, privacy: .public)")
+            return
+        }
+
         do {
             try await click(item: item, with: mouseButton)
         } catch {
@@ -1546,31 +1556,67 @@ extension MenuBarItemManager {
         }
     }
 
+    /// The tags of the items now in the temporary slot, oldest first.
+    var temporarilyShownTags: [MenuBarItemTag] {
+        temporarilyShownItemContexts.map(\.tag)
+    }
+
+    /// Sends the item that is in the temporary slot back to where it was, so a
+    /// new click starts from the bar as the user left it.
+    func returnTemporarilyShownItemNow(_ tag: MenuBarItemTag) async {
+        await rehideTemporarilyShownItems(force: true, only: [tag])
+    }
+
     /// Rehides all temporarily shown items.
     ///
     /// If an item is currently showing its interface, this method waits
     /// for the interface to close before hiding the items.
-    func rehideTemporarilyShownItems() async {
+    ///
+    /// - Parameter force: When `true` (the user picked another item), the
+    ///   shown items return at once, without waiting for an interface to close
+    ///   or for the input to pause.
+    func rehideTemporarilyShownItems(force: Bool = false, only tags: Set<MenuBarItemTag>? = nil) async {
         guard let appState else {
             logger.error("Missing AppState, so not rehiding")
             return
         }
-        guard !temporarilyShownItemContexts.isEmpty else {
+        guard temporarilyShownItemContexts.contains(where: { tags?.contains($0.tag) ?? true }) else {
             return
         }
-        guard !temporarilyShownItemContexts.contains(where: { $0.isShowingInterface }) else {
-            logger.debug("Menu bar item interface is shown, so waiting to rehide")
-            runRehideTimer(for: 3)
-            return
+        var tags = tags
+        rehideTimer?.invalidate()
+        if force {
+            // Never pull an item back while its menu is open: give the click
+            // that dismisses it a moment, then leave it for the timer.
+            func isBusy(_ context: TemporarilyShownItemContext) -> Bool {
+                (tags?.contains(context.tag) ?? true) && context.isShowingInterface
+            }
+            for _ in 0..<12 where temporarilyShownItemContexts.contains(where: isBusy) {
+                await eventSleep(for: .milliseconds(50))
+            }
+            let busy = Set(temporarilyShownItemContexts.filter(isBusy).map(\.tag))
+            if !busy.isEmpty {
+                logger.debug("Menu still open, so not forcing the return of \(busy.count, privacy: .public) item(s)")
+                runRehideTimer(for: 3)
+                tags = (tags ?? Set(temporarilyShownItemContexts.map(\.tag))).subtracting(busy)
+                guard temporarilyShownItemContexts.contains(where: { tags?.contains($0.tag) ?? true }) else {
+                    return
+                }
+            }
+        } else {
+            guard !temporarilyShownItemContexts.contains(where: { $0.isShowingInterface }) else {
+                logger.debug("Menu bar item interface is shown, so waiting to rehide")
+                runRehideTimer(for: 3)
+                return
+            }
+            guard hasUserPausedInput(for: .milliseconds(250)) else {
+                logger.debug("Found recent user input, so waiting to rehide")
+                runRehideTimer(for: 1)
+                return
+            }
         }
-        guard hasUserPausedInput(for: .milliseconds(250)) else {
-            logger.debug("Found recent user input, so waiting to rehide")
-            runRehideTimer(for: 1)
-            return
-        }
-
-        var currentContexts = temporarilyShownItemContexts
-        temporarilyShownItemContexts.removeAll()
+        var currentContexts = temporarilyShownItemContexts.filter { tags?.contains($0.tag) ?? true }
+        temporarilyShownItemContexts.removeAll { context in currentContexts.contains { $0 === context } }
 
         let items = await MenuBarItem.getMenuBarItems(option: .activeSpace)
         var failedContexts = [TemporarilyShownItemContext]()
@@ -1580,7 +1626,9 @@ extension MenuBarItemManager {
             appState.hidEventManager.startAll()
         }
 
-        await eventSleep(for: .milliseconds(250))
+        if !force {
+            await eventSleep(for: .milliseconds(250))
+        }
 
         logger.debug("Rehiding temporarily shown items")
 
