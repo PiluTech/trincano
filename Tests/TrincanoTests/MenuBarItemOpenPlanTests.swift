@@ -96,6 +96,17 @@ struct MenuBarItemOpenPlanTests {
         #expect(MenuBarItemOpenPlan.PressOutcome.uncertain.fallsBackToClick == false)
     }
 
+    @Test func aPressCancelledAfterItRanDoesNotClick() {
+        // Not cancelled: only an unavailable press falls back to the click.
+        #expect(MenuBarItemOpenPlan.shouldClickAfterPress(.unavailable, isCancelled: false))
+        #expect(!MenuBarItemOpenPlan.shouldClickAfterPress(.pressed, isCancelled: false))
+        #expect(!MenuBarItemOpenPlan.shouldClickAfterPress(.uncertain, isCancelled: false))
+        // Cancelled (past the deadline during the press): no click afterwards.
+        #expect(!MenuBarItemOpenPlan.shouldClickAfterPress(.unavailable, isCancelled: true))
+        #expect(!MenuBarItemOpenPlan.shouldClickAfterPress(.pressed, isCancelled: true))
+        #expect(!MenuBarItemOpenPlan.shouldClickAfterPress(.uncertain, isCancelled: true))
+    }
+
     @Test func onlyAnEnabledMenuBarItemIsPressable() {
         #expect(MenuBarItemOpenPlan.isPressable(isMenuBarItem: true, isEnabled: true))
         #expect(!MenuBarItemOpenPlan.isPressable(isMenuBarItem: false, isEnabled: true))
