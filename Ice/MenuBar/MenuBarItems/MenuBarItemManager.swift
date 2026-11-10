@@ -34,7 +34,9 @@ final class MenuBarItemManager: ObservableObject {
     private var rehideTimer: Timer?
 
     /// Runs the clicks of the Trincano Bar one at a time.
-    let openQueue = SerialAsyncQueue()
+    lazy var openQueue = SerialAsyncQueue(onTimeout: { [logger] in
+        logger.warning("A menu bar item click ran past its deadline, so the next one goes on")
+    })
 
     /// Timestamp of the most recent menu bar item move operation.
     private var lastMoveOperationTimestamp: ContinuousClock.Instant?
@@ -1440,7 +1442,11 @@ extension MenuBarItemManager {
             }
             logger.debug("Rehide timer fired")
             Task {
-                await self.rehideTemporarilyShownItems()
+                // Through the same queue as the clicks, so the timer never
+                // returns an item in the middle of a click.
+                await self.openQueue.run {
+                    await self.rehideTemporarilyShownItems()
+                }
             }
         }
     }
@@ -1509,6 +1515,13 @@ extension MenuBarItemManager {
             return
         }
 
+        // The queue cancels an operation that ran past its deadline: don't
+        // start a move that the next operation would race.
+        guard TemporaryShowCancellation.startsMove(cancelled: Task.isCancelled) else {
+            logger.warning("Operation ran past its deadline, so not showing \(item.logString, privacy: .public)")
+            return
+        }
+
         appState.hidEventManager.stopAll()
         defer {
             appState.hidEventManager.startAll()
@@ -1516,10 +1529,25 @@ extension MenuBarItemManager {
 
         logger.debug("Temporarily showing \(item.logString, privacy: .public)")
 
-        do {
-            try await move(item: item, to: .leftOfItem(targetItem))
-        } catch {
-            logger.error("Error showing item: \(error, privacy: .public)")
+        // The move runs in its own (non-child) task: the queue's cancellation
+        // must not stop it half way and leave the item displaced without a
+        // context. Awaiting the result still lets this task see the
+        // cancellation afterwards.
+        let moveResult = await Task { @MainActor in
+            do {
+                try await self.move(item: item, to: .leftOfItem(targetItem))
+                return true
+            } catch {
+                self.logger.error("Error showing item: \(error, privacy: .public)")
+                return false
+            }
+        }.value
+
+        // A finished move is always registered, even if the queue cancelled this
+        // operation meanwhile: the item is out of its place and only the context
+        // lets the rehide timer send it back. Cancellation only skips the click.
+        let afterMove = TemporaryShowCancellation.afterMove(succeeded: moveResult, cancelled: Task.isCancelled)
+        guard afterMove != .giveUp else {
             return
         }
 
@@ -1536,8 +1564,11 @@ extension MenuBarItemManager {
 
         // The item may have been sent back while it was moving (another
         // click, or the rehide timer): don't click an item that is hidden again.
-        guard temporarilyShownItemContexts.contains(where: { $0 === context }) else {
-            logger.debug("Item was returned before the click, so not clicking \(item.logString, privacy: .public)")
+        guard TemporaryShowCancellation.clicks(
+            cancelled: Task.isCancelled,
+            contextStillRegistered: temporarilyShownItemContexts.contains(where: { $0 === context })
+        ) else {
+            logger.debug("Item was returned (or the operation cancelled) before the click, so not clicking \(item.logString, privacy: .public)")
             return
         }
 
@@ -1674,6 +1705,13 @@ extension MenuBarItemManager {
             )
             temporarilyShownItemContexts.append(contentsOf: failedContexts.reversed())
             runRehideTimer(for: 3)
+        }
+
+        if RehideTimerPlan.needsRearm(
+            remainingItems: temporarilyShownItemContexts.count,
+            timerIsScheduled: rehideTimer?.isValid ?? false
+        ) {
+            runRehideTimer()
         }
     }
 
