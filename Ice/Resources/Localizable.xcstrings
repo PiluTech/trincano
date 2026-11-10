@@ -1331,6 +1331,23 @@
         }
       }
     },
+    "Hidden items": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escondidos"
+          }
+        }
+      }
+    },
     "Hidden items on this display": {
       "extractionState": "manual",
       "localizations": {

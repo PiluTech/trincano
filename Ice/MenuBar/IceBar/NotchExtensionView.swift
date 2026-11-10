@@ -43,7 +43,7 @@ struct NotchExtensionContentView: View {
     }
 
     private var maxContentHeight: CGFloat {
-        NotchExtensionFrame.maxHeight - contentPadding * 2
+        NotchExtensionFrame.contentMaxHeight - contentPadding * 2
     }
 
     /// 200 ms ease-out from the notch; no movement with "Reduce motion".
@@ -54,8 +54,11 @@ struct NotchExtensionContentView: View {
     var body: some View {
         mainContent
             .padding(contentPadding)
-            .frame(minWidth: NotchExtensionFrame.minWidth, maxWidth: NotchExtensionFrame.maxWidth)
-            .frame(maxHeight: NotchExtensionFrame.maxHeight)
+            .frame(
+                minWidth: NotchExtensionFrame.minWidth - NotchExtensionFrame.outerInset * 2,
+                maxWidth: NotchExtensionFrame.contentMaxWidth
+            )
+            .frame(maxHeight: NotchExtensionFrame.contentMaxHeight)
             .background {
                 if usesBlackBackground {
                     shape.fill(Color.black)
@@ -67,7 +70,7 @@ struct NotchExtensionContentView: View {
             }
             .environment(\.colorScheme, usesBlackBackground ? .dark : .light)
             .foregroundStyle(usesBlackBackground ? Color.white : Color.black)
-            .padding([.horizontal, .bottom], 8)
+            .padding([.horizontal, .bottom], NotchExtensionFrame.outerInset)
             .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
             .fixedSize()
             .opacity(appeared ? 1 : 0)
@@ -150,7 +153,7 @@ struct NotchExtensionContentView: View {
     private func groupView(_ group: NotchExtensionGroups.Group<MenuBarItem>) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 4) {
-                Text(group.kind == .behindNotch ? "Behind the notch" : "Hidden")
+                Text(group.kind == .behindNotch ? "Behind the notch" : "Hidden items")
                 Text(verbatim: "· \(group.items.count)")
             }
             .font(.system(size: 11, weight: .semibold))
@@ -189,7 +192,7 @@ private struct NotchFlowLayout: Layout {
     }
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let maxWidth = proposal.width ?? NotchExtensionFrame.maxWidth
+        let maxWidth = proposal.width ?? NotchExtensionFrame.contentMaxWidth
         let rows = rows(for: subviews, maxWidth: maxWidth)
         var width: CGFloat = 0
         var height: CGFloat = 0

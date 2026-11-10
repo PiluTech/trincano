@@ -107,4 +107,27 @@ struct NotchExtensionFrameTests {
     @Test func sizeKeepsTheMinimumWidth() {
         #expect(NotchExtensionFrame.clamped(CGSize(width: 10, height: 10)).width == NotchExtensionFrame.minWidth)
     }
+
+    @Test func usesTheRealPanelSizeWithoutClampingAgain() {
+        // The panel is the content plus the outer inset (8 pt on the sides and
+        // bottom): 536 x 244 at most. The top must still sit on the menu bar.
+        let real = CGSize(width: 536, height: 244)
+        let frame = NotchExtensionFrame.frame(size: real, notch: notchFrame, screen: screen)
+        #expect(frame.size == real)
+        #expect(frame.maxY == notchFrame.minY)
+        #expect(frame.midX == notchFrame.midX)
+    }
+
+    @Test func realMaximumSizeStaysInsideTheScreenAtTheEdge() {
+        let real = CGSize(width: 536, height: 244)
+        let off = CGRect(x: 1300, y: 924, width: 190, height: 32)
+        let frame = NotchExtensionFrame.frame(size: real, notch: off, screen: screen)
+        #expect(frame.maxX <= screen.maxX)
+        #expect(frame.maxY == off.minY)
+    }
+
+    @Test func contentLimitsPlusOuterInsetFitTheMaximumPanel() {
+        #expect(NotchExtensionFrame.contentMaxWidth + NotchExtensionFrame.outerInset * 2 == NotchExtensionFrame.maxWidth)
+        #expect(NotchExtensionFrame.contentMaxHeight + NotchExtensionFrame.outerInset == NotchExtensionFrame.maxHeight)
+    }
 }

@@ -29,6 +29,7 @@ O plano das 7 fases foi concluído (a fase 7, Swift 6, entrou pelo PR #12); veja
 - Nome/IDs: `Trincano`, `br.com.pilutech.trincano`. Alvo e módulo Swift seguem `Ice`; tipos mantêm prefixo `Ice` (cherry-pick limpo, use `git cherry-pick -x`).
 - XPC: nunca desligar a checagem de peer; ver `XPCPeerPolicy`.
 - Swift 6 com concorrência estrita (zero avisos); `@unchecked Sendable`/`nonisolated(unsafe)`/`assumeIsolated` só com a invariante comentada. Interface em PT-BR e en (String Catalog); texto novo entra no catálogo.
+- Extensão do notch (Barra em tela com notch): ancorada no notch, ignora o local (ponteiro/ícone) e o estilo de aparência da Barra; tamanho real do painel = conteúdo + `outerInset` (`NotchExtensionFrame`).
 - Bug: teste que falha primeiro. Lint limpo. Atualizar este arquivo e o `AGENTS.md` (idêntico) a cada fluxo novo.
 
 ## Página do catálogo (PRODUTO.md)

@@ -34,18 +34,22 @@ Canvas: https://claude.ai/artifact/BZG18TuyNFaJoXbjiK6mLi. Escolhas: Barra **B**
 Sem monitor externo não há print do mapa (não foi possível capturar).
 
 ## PR 3: Barra B (extensão do notch)
-- Em tela **com notch**, ao mostrar a seção Escondida, a Barra vira a "extensão do notch" (`NotchExtensionContentView`): painel preso à borda de baixo da barra de menus, centrado no notch (`NotchExtensionFrame`, sem sobrepor a faixa da barra de menus, então o clique no notch não é afetado), com grupos "Atrás do notch · N" e "Escondida · N" (`NotchExtensionGroups`), itens em linhas que quebram (`FlowRows`), altura máx. 236 pt com rolagem vertical e dica "Role para ver os N itens", estado vazio "Nenhum item escondido nesta tela.".
+- Em tela **com notch**, ao mostrar a seção Escondida, a Barra vira a "extensão do notch" (`NotchExtensionContentView`): painel preso à borda de baixo da barra de menus, centrado no notch (`NotchExtensionFrame`, sem sobrepor a faixa da barra de menus, então o clique no notch não é afetado), com grupos "Atrás do notch · N" e "Escondidos · N" (`NotchExtensionGroups`), itens em linhas que quebram (`FlowRows`), altura máx. 236 pt com rolagem vertical e dica "Role para ver os N itens", estado vazio "Nenhum item escondido nesta tela.".
 - **Caminho seguro**: sem notch, geometria nula, ou seção Sempre escondida → a Barra de hoje, intacta (`NotchExtensionPresentation.mode`). Mesmo painel e mesma lógica de mostrar/esconder; só muda a view e a posição.
 - Fundo preto (junta com o notch) só quando a barra de menus é escura. Com barra de menus clara os ícones capturados são escuros e sumiriam no preto, então usa o fundo normal da Barra (decisão minha; o canvas dizia "sempre escura").
 - Movimento: entrada de 200 ms ease-out de cima (offset 8 pt + opacidade); com Reduzir movimento, aparece direto. **Fechar não anima** (o painel fecha na hora; os 150 ms do canvas ficaram de fora).
-- **Não feito**: cantos côncavos que "nascem" do notch (só cantos de baixo arredondados) e a revelação por máscara; a posição Dinâmica/Ponteiro/Ícone não vale na extensão (ancorada no notch). Contraste do texto secundário (.secondary sobre preto, tema escuro forçado) não medido numericamente.
+- **Não feito**: cantos côncavos que "nascem" do notch (só cantos de baixo arredondados) e a revelação por máscara; a posição Dinâmica/Ponteiro/Ícone e o estilo de aparência da Barra (cor/borda) não valem na extensão: **decisão**, ela é ancorada no notch e tem o próprio visual (preto ou cor da barra de menus da tela do painel). Contraste do texto secundário (.secondary sobre preto, tema escuro forçado) não medido numericamente.
 - Testes puros: `NotchExtensionTests` (apresentação, grupos sem repetição, quebra de linha, posição sob o notch e dentro da tela, tamanho mín./máx.). Vermelho: erro de compilação (tipos ausentes) antes da implementação.
 
 ### Roteiro ao vivo (Air M4, e pílula nos MacBook Pro)
-1. Com item preso atrás do notch: clique no notch / atalho da Barra → a extensão cresce do notch, com "Atrás do notch" e "Escondida".
+1. Com item preso atrás do notch: clique no notch / atalho da Barra → a extensão cresce do notch, com "Atrás do notch" e "Escondidos".
 2. Clicar num item da extensão (esquerdo e direito) abre o item e fecha a Barra.
 3. Muitos itens: quebra em linhas, 3 linhas e rolagem.
 4. Barra de menus clara (papel de parede claro): fundo claro, ícones visíveis.
 5. Clique no notch de novo fecha; o clique no notch continua funcionando com a extensão aberta.
 6. Monitor externo: sem notch → Barra de sempre.
 7. Reduzir movimento ligado: aparece sem animar.
+
+### Ajustes da revisão do #18
+- Tamanho: o painel real (conteúdo + margem externa de 8 pt nas laterais e embaixo, para a sombra) é no máximo 520 x 236; `NotchExtensionFrame.frame` usa o tamanho real, sem limitar de novo, então o topo fica na barra de menus e a trava de borda usa a largura certa.
+- A cor da barra (fundo claro/escuro da extensão) agora é calculada pela tela do painel, não só na tela principal.

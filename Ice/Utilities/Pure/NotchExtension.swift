@@ -86,6 +86,12 @@ enum NotchExtensionFrame {
     static let maxWidth: CGFloat = 520
     /// Three rows of items plus the group labels, then it scrolls.
     static let maxHeight: CGFloat = 236
+    /// Transparent margin around the content (sides and bottom) for the shadow.
+    static let outerInset: CGFloat = 8
+    /// Limits of the content so that content + outer inset is never bigger
+    /// than the maximum panel.
+    static let contentMaxWidth: CGFloat = maxWidth - outerInset * 2
+    static let contentMaxHeight: CGFloat = maxHeight - outerInset
 
     static func clamped(_ size: CGSize) -> CGSize {
         CGSize(
@@ -97,8 +103,9 @@ enum NotchExtensionFrame {
     /// The panel frame in AppKit coordinates (y up): centered under the notch,
     /// its top edge on the bottom edge of the menu bar (never over the menu
     /// bar, so the notch click handling is unaffected), and inside the screen.
+    /// `size` is the real panel size (content plus outer inset), already
+    /// limited by the view to `maxWidth` x `maxHeight`.
     static func frame(size: CGSize, notch: CGRect, screen: CGRect) -> CGRect {
-        let size = clamped(size)
         let upper = max(screen.minX, screen.maxX - size.width)
         let x = min(max(notch.midX - size.width / 2, screen.minX), upper)
         return CGRect(x: x, y: notch.minY - size.height, width: size.width, height: size.height)
