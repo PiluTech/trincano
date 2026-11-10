@@ -81,16 +81,25 @@ extension MenuBarItemManager {
             isOnScreen: Bridging.isWindowOnScreen(item.windowID),
             isLeftButton: mouseButton == .left
         )
-        switch strategy {
-        case .moveAndClick:
-            await temporarilyShow(item: item, clickingWith: mouseButton)
-        case .accessibilityPress:
-            if await !pressThroughAccessibility(item: item).fallsBackToClick {
-                return
+        // One temporary place: the item shown by the previous click goes back
+        // before this one is handled, so items don't stack or push others.
+        let steps = TemporarySlotPlan<MenuBarItemTag>.steps(
+            shown: temporarilyShownTags,
+            clicked: item.tag,
+            needsSlot: strategy == .moveAndClick
+        )
+        for step in steps {
+            switch step {
+            case .returnToOrigin:
+                await returnTemporarilyShownItemsNow()
+            case .showInSlot:
+                await temporarilyShow(item: item, clickingWith: mouseButton)
+            case .openInPlace:
+                if strategy == .accessibilityPress, await !pressThroughAccessibility(item: item).fallsBackToClick {
+                    return
+                }
+                await clickInPlace(item: item, with: mouseButton)
             }
-            await clickInPlace(item: item, with: mouseButton)
-        case .syntheticClick:
-            await clickInPlace(item: item, with: mouseButton)
         }
     }
 

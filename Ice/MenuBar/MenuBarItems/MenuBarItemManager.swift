@@ -1546,11 +1546,29 @@ extension MenuBarItemManager {
         }
     }
 
+    /// The tags of the items now in the temporary slot, oldest first.
+    var temporarilyShownTags: [MenuBarItemTag] {
+        temporarilyShownItemContexts.map(\.tag)
+    }
+
+    /// Sends the item that is in the temporary slot back to where it was, so a
+    /// new click starts from the bar as the user left it.
+    func returnTemporarilyShownItemsNow() async {
+        guard !temporarilyShownItemContexts.isEmpty else {
+            return
+        }
+        await rehideTemporarilyShownItems(force: true)
+    }
+
     /// Rehides all temporarily shown items.
     ///
     /// If an item is currently showing its interface, this method waits
     /// for the interface to close before hiding the items.
-    func rehideTemporarilyShownItems() async {
+    ///
+    /// - Parameter force: When `true` (the user picked another item), the
+    ///   shown items return at once, without waiting for an interface to close
+    ///   or for the input to pause.
+    func rehideTemporarilyShownItems(force: Bool = false) async {
         guard let appState else {
             logger.error("Missing AppState, so not rehiding")
             return
@@ -1558,16 +1576,19 @@ extension MenuBarItemManager {
         guard !temporarilyShownItemContexts.isEmpty else {
             return
         }
-        guard !temporarilyShownItemContexts.contains(where: { $0.isShowingInterface }) else {
-            logger.debug("Menu bar item interface is shown, so waiting to rehide")
-            runRehideTimer(for: 3)
-            return
+        if !force {
+            guard !temporarilyShownItemContexts.contains(where: { $0.isShowingInterface }) else {
+                logger.debug("Menu bar item interface is shown, so waiting to rehide")
+                runRehideTimer(for: 3)
+                return
+            }
+            guard hasUserPausedInput(for: .milliseconds(250)) else {
+                logger.debug("Found recent user input, so waiting to rehide")
+                runRehideTimer(for: 1)
+                return
+            }
         }
-        guard hasUserPausedInput(for: .milliseconds(250)) else {
-            logger.debug("Found recent user input, so waiting to rehide")
-            runRehideTimer(for: 1)
-            return
-        }
+        rehideTimer?.invalidate()
 
         var currentContexts = temporarilyShownItemContexts
         temporarilyShownItemContexts.removeAll()
@@ -1580,7 +1601,9 @@ extension MenuBarItemManager {
             appState.hidEventManager.startAll()
         }
 
-        await eventSleep(for: .milliseconds(250))
+        if !force {
+            await eventSleep(for: .milliseconds(250))
+        }
 
         logger.debug("Rehiding temporarily shown items")
 
