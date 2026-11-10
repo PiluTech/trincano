@@ -30,6 +30,18 @@ struct DisplayMapView: View {
     }
 
     var body: some View {
+        // Hides itself when a display is disconnected with the settings open.
+        if DisplayMapModel.shouldShowMap(displayCount: NSScreen.screens.count) {
+            content
+        }
+        EmptyView()
+            .onReceive(NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)) { _ in
+                screenRevision += 1
+            }
+    }
+
+    @ViewBuilder
+    private var content: some View {
         VStack(alignment: .leading, spacing: 12) {
             GeometryReader { geometry in
                 let entries = DisplayMapModel.entries(for: descriptors, fitting: geometry.size)
@@ -47,9 +59,6 @@ struct DisplayMapView: View {
             detail
         }
         .id(screenRevision)
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)) { _ in
-            screenRevision += 1
-        }
     }
 
     // MARK: Map
@@ -57,10 +66,7 @@ struct DisplayMapView: View {
     /// The selected display, falling back to the first one when the selected
     /// display was disconnected (or nothing is selected yet).
     private func effectiveSelectedID(_ entries: [DisplayMapEntry]) -> UInt32? {
-        if let selectedID, entries.contains(where: { $0.id == selectedID }) {
-            return selectedID
-        }
-        return entries.first?.id
+        DisplayMapModel.effectiveSelection(current: selectedID, connectedIDs: entries.map(\.id))
     }
 
     @ViewBuilder

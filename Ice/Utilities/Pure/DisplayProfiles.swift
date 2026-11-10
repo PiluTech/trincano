@@ -24,6 +24,18 @@ struct DisplayProfiles: Codable, Equatable {
         uuid.flatMap { modes[$0] } ?? .followGlobal
     }
 
+    /// The mode that applies at runtime to a connected display.
+    ///
+    /// A display without a UUID, or whose UUID is shared with another connected
+    /// display, can't have its own profile (the settings UI says it follows the
+    /// global setting), so any profile stored under that UUID is ignored.
+    func effectiveMode(for uuid: String?, connectedUUIDs: [String?]) -> DisplayBarMode {
+        guard let uuid, connectedUUIDs.filter({ $0 == uuid }).count <= 1 else {
+            return .followGlobal
+        }
+        return mode(for: uuid)
+    }
+
     mutating func set(_ mode: DisplayBarMode, for uuid: String) {
         if mode == .followGlobal {
             modes.removeValue(forKey: uuid)

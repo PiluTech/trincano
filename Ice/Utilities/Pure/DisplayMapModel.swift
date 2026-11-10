@@ -80,8 +80,10 @@ enum DisplayMapModel {
                 height: f.height * scale
             )
             if displays.count > 1 {
-                // Visual gap so neighbours don't touch.
-                rect = rect.insetBy(dx: gap / 2, dy: gap / 2)
+                // Visual gap so neighbours don't touch. Capped so a tiny or
+                // zero-sized rect never collapses to `CGRect.null`.
+                let inset = max(min(gap / 2, rect.width / 4, rect.height / 4), 0)
+                rect = rect.insetBy(dx: inset, dy: inset)
             }
             let key = display.uuid.flatMap { uuidCounts[$0] == 1 ? $0 : nil }
             return DisplayMapEntry(
@@ -95,5 +97,20 @@ enum DisplayMapModel {
                 profileKey: key
             )
         }
+    }
+
+    /// The selected display: the current one while it is connected, else the
+    /// first connected one (the selected display was disconnected, or nothing
+    /// is selected yet).
+    static func effectiveSelection(current: UInt32?, connectedIDs: [UInt32]) -> UInt32? {
+        if let current, connectedIDs.contains(current) {
+            return current
+        }
+        return connectedIDs.first
+    }
+
+    /// The map only makes sense with two or more displays.
+    static func shouldShowMap(displayCount: Int) -> Bool {
+        displayCount >= 2
     }
 }

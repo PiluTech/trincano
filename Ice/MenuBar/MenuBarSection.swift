@@ -84,7 +84,10 @@ final class MenuBarSection {
         guard let appState else {
             return false
         }
-        let profile = appState.settings.general.displayProfiles.mode(for: targetDisplayUUID)
+        let profile = appState.settings.general.displayProfiles.effectiveMode(
+            for: targetDisplayUUID,
+            connectedUUIDs: NSScreen.screens.map(\.displayUUIDString)
+        )
         return DisplayBarPolicy.useBar(global: appState.settings.general.useIceBar, mode: profile) ||
             notchSession.isUsingBar
     }
