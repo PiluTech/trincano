@@ -1529,17 +1529,27 @@ extension MenuBarItemManager {
 
         logger.debug("Temporarily showing \(item.logString, privacy: .public)")
 
-        do {
-            try await move(item: item, to: .leftOfItem(targetItem))
-        } catch {
-            logger.error("Error showing item: \(error, privacy: .public)")
-            return
-        }
+        // The move runs in its own (non-child) task: the queue's cancellation
+        // must not stop it half way and leave the item displaced without a
+        // context. Awaiting the result still lets this task see the
+        // cancellation afterwards.
+        let moveResult = await Task { @MainActor in
+            do {
+                try await self.move(item: item, to: .leftOfItem(targetItem))
+                return true
+            } catch {
+                self.logger.error("Error showing item: \(error, privacy: .public)")
+                return false
+            }
+        }.value
 
         // A finished move is always registered, even if the queue cancelled this
         // operation meanwhile: the item is out of its place and only the context
         // lets the rehide timer send it back. Cancellation only skips the click.
-        assert(TemporaryShowCancellation.registersContext(afterSuccessfulMove: Task.isCancelled))
+        let afterMove = TemporaryShowCancellation.afterMove(succeeded: moveResult, cancelled: Task.isCancelled)
+        guard afterMove != .giveUp else {
+            return
+        }
 
         let context = TemporarilyShownItemContext(tag: item.tag, returnDestination: destination)
         temporarilyShownItemContexts.append(context)

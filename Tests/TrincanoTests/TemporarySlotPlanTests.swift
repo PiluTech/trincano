@@ -225,6 +225,13 @@ struct TemporaryShowCancellationTests {
         #expect(TemporaryShowCancellation.registersContext(afterSuccessfulMove: false))
     }
 
+    @Test func cancelledDuringTheMoveStillRegistersAndOnlySkipsTheClick() {
+        #expect(TemporaryShowCancellation.afterMove(succeeded: true, cancelled: true) == .registerOnly)
+        #expect(TemporaryShowCancellation.afterMove(succeeded: true, cancelled: false) == .registerAndClick)
+        #expect(TemporaryShowCancellation.afterMove(succeeded: false, cancelled: true) == .giveUp)
+        #expect(TemporaryShowCancellation.afterMove(succeeded: false, cancelled: false) == .giveUp)
+    }
+
     @Test func cancellationOnlySkipsTheClick() {
         #expect(!TemporaryShowCancellation.clicks(cancelled: true, contextStillRegistered: true))
         #expect(!TemporaryShowCancellation.clicks(cancelled: false, contextStillRegistered: false))
