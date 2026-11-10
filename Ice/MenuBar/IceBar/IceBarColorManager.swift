@@ -49,7 +49,8 @@ final class IceBarColorManager: ObservableObject {
                     else {
                         return
                     }
-                    updateWindowImage(for: screen)
+                    // No capture here: performShow already runs
+                    // updateAllProperties (one capture per opening).
                     updateColorInfo(with: iceBarPanel.frame, screen: screen)
                 }
                 .store(in: &c)
@@ -61,8 +62,7 @@ final class IceBarColorManager: ObservableObject {
                         let self,
                         let iceBarPanel,
                         let screen = iceBarPanel.screen,
-                        iceBarPanel.isVisible,
-                        screen == .main
+                        iceBarPanel.isVisible
                     else {
                         return
                     }
@@ -95,7 +95,7 @@ final class IceBarColorManager: ObservableObject {
                 else {
                     return
                 }
-                if IceBarPresentationPolicy.shouldCaptureOnPeriodicRefresh(isBarVisible: iceBarPanel.isVisible) {
+                IceBarPeriodicRefresh.run(isBarVisible: iceBarPanel.isVisible) {
                     updateWindowImage(for: screen)
                     withAnimation(Motion.animation(.color)) {
                         self.updateColorInfo(with: iceBarPanel.frame, screen: screen)
