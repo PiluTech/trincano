@@ -97,6 +97,13 @@ extension MenuBarItemManager {
             needsSlot: strategy == .moveAndClick
         )
         for step in steps {
+            // Cancelled (past the queue's deadline): stop only BETWEEN steps.
+            // Each step runs to its end, so the event taps and the cursor are
+            // never left half way, and a step that moved an item registered it.
+            guard !Task.isCancelled else {
+                Logger.default.warning("Open of \(item.logString, privacy: .public) ran past its deadline, so stopping before the next step")
+                return
+            }
             switch step {
             case .returnToOrigin(let tag):
                 await returnTemporarilyShownItemNow(tag)
