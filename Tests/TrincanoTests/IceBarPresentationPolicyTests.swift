@@ -24,9 +24,16 @@ struct IceBarPresentationPolicyTests {
         #expect(IceBarPresentationPolicy.shouldWaitForRefresh(itemCount: 0, itemsWithImages: 0) == false)
     }
 
-    @Test func periodicRefreshCapturesOnlyWhileTheBarIsVisible() {
+    @Test func periodicTickDoesNotCaptureWhileTheBarIsClosed() {
         // A closed bar must not capture the screen every 5 s.
-        #expect(IceBarPresentationPolicy.shouldCaptureOnPeriodicRefresh(isBarVisible: false) == false)
-        #expect(IceBarPresentationPolicy.shouldCaptureOnPeriodicRefresh(isBarVisible: true))
+        var captures = 0
+        IceBarPeriodicRefresh.run(isBarVisible: false) { captures += 1 }
+        #expect(captures == 0)
+    }
+
+    @Test func periodicTickCapturesOnceWhileTheBarIsVisible() {
+        var captures = 0
+        IceBarPeriodicRefresh.run(isBarVisible: true) { captures += 1 }
+        #expect(captures == 1)
     }
 }

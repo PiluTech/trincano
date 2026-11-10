@@ -13,11 +13,16 @@ enum IceBarPresentationPolicy {
     static func shouldWaitForRefresh(itemCount: Int, itemsWithImages: Int) -> Bool {
         itemCount > 0 && itemsWithImages == 0
     }
+}
 
-    /// The 5 s timer / space / screen / theme refresh only captures the
-    /// wallpaper and menu bar images while the bar is on screen. When it
-    /// opens, the visibility sink captures once, so nothing is stale.
-    static func shouldCaptureOnPeriodicRefresh(isBarVisible: Bool) -> Bool {
-        isBarVisible
+/// Gate for the 5 s timer / space / screen / theme refresh: the wallpaper and
+/// menu bar capture runs only while the bar is on screen. Opening the bar
+/// already captures once (performShow -> updateAllProperties), so nothing is
+/// stale.
+enum IceBarPeriodicRefresh {
+    static func run(isBarVisible: Bool, capture: () -> Void) {
+        if isBarVisible {
+            capture()
+        }
     }
 }
