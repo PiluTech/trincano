@@ -144,7 +144,8 @@ struct SerialAsyncQueueTests {
             timeout: .seconds(5),
             onTimeout: { timeouts += 1 },
             sleep: { _ in
-                while !Task.isCancelled, !(await gate.isOpen) {
+                for _ in 0..<Self.maxIterations where !Task.isCancelled {
+                    if await gate.isOpen { return }
                     await Task.yield()
                 }
             }
@@ -154,14 +155,15 @@ struct SerialAsyncQueueTests {
         let stuck = Task { @MainActor in
             await queue.run {
                 log.add("stuck start")
-                while !Task.isCancelled {
+                // Bounded: a queue that never cancels fails the test, not hangs it.
+                for _ in 0..<Self.maxIterations where !Task.isCancelled {
                     await Task.yield()
                 }
-                log.add("stuck cancelled")
+                if Task.isCancelled { log.add("stuck cancelled") }
             }
         }
         // Submit "next" only once "stuck" is running: the order is certain.
-        while !log.entries.contains("stuck start") {
+        for _ in 0..<Self.maxIterations where !log.entries.contains("stuck start") {
             await Task.yield()
         }
         let next = Task { @MainActor in
@@ -181,7 +183,7 @@ struct SerialAsyncQueueTests {
         var timeouts = 0
         let queue = SerialAsyncQueue(onTimeout: { timeouts += 1 }, sleep: { _ in
             // Never reaches the deadline; ends when the queue cancels the timer.
-            while !Task.isCancelled {
+            for _ in 0..<Self.maxIterations where !Task.isCancelled {
                 await Task.yield()
             }
         })
@@ -196,6 +198,8 @@ struct SerialAsyncQueueTests {
         #expect(value == 42)
     }
 
+    nonisolated static let maxIterations = 200_000
+
     actor Gate {
         private(set) var isOpen = false
         func open() { isOpen = true }
@@ -205,5 +209,39 @@ struct SerialAsyncQueueTests {
     final class Log {
         var entries = [String]()
         func add(_ entry: String) { entries.append(entry) }
+    }
+}
+
+struct TemporaryShowCancellationTests {
+    typealias Plan = TemporarySlotPlan<String>
+
+    @Test func aCancelledOperationDoesNotStartAMove() {
+        #expect(!TemporaryShowCancellation.startsMove(cancelled: true))
+        #expect(TemporaryShowCancellation.startsMove(cancelled: false))
+    }
+
+    @Test func aMoveThatFinishedIsRegisteredEvenWhenCancelled() {
+        #expect(TemporaryShowCancellation.registersContext(afterSuccessfulMove: true))
+        #expect(TemporaryShowCancellation.registersContext(afterSuccessfulMove: false))
+    }
+
+    @Test func cancellationOnlySkipsTheClick() {
+        #expect(!TemporaryShowCancellation.clicks(cancelled: true, contextStillRegistered: true))
+        #expect(!TemporaryShowCancellation.clicks(cancelled: false, contextStillRegistered: false))
+        #expect(TemporaryShowCancellation.clicks(cancelled: false, contextStillRegistered: true))
+    }
+
+    @Test func cancelledAfterTheMoveTheItemGoesBackThroughTheTimer() {
+        // A was moved into the slot, then the operation was cancelled.
+        var shown = [String]()
+        if TemporaryShowCancellation.startsMove(cancelled: false) {
+            // move done; cancelled now
+            if TemporaryShowCancellation.registersContext(afterSuccessfulMove: true) {
+                shown.append("A")
+            }
+        }
+        #expect(shown == ["A"])
+        // The rehide timer (and the next click) find A and send it back.
+        #expect(Plan.steps(shown: shown, clicked: "B", needsSlot: true) == [.returnToOrigin("A"), .showInSlot("B")])
     }
 }

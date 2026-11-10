@@ -34,3 +34,26 @@ enum TemporarySlotPlan<Tag: Equatable> {
         return steps
     }
 }
+
+/// What `temporarilyShow` does when its task is cancelled (the queue cancels an
+/// operation that ran past its deadline).
+///
+/// Cancellation only decides whether to *start* work (a move) or to *click*.
+/// A move that finished is always registered: the item is out of its place and
+/// only the registered context lets the rehide timer send it back.
+enum TemporaryShowCancellation {
+    /// Whether to start moving the item into the slot.
+    static func startsMove(cancelled: Bool) -> Bool {
+        !cancelled
+    }
+
+    /// Whether to register the context after a move that succeeded. Always.
+    static func registersContext(afterSuccessfulMove cancelled: Bool) -> Bool {
+        true
+    }
+
+    /// Whether to click the item once it is in the slot.
+    static func clicks(cancelled: Bool, contextStillRegistered: Bool) -> Bool {
+        !cancelled && contextStillRegistered
+    }
+}

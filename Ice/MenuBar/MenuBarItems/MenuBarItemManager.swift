@@ -1515,6 +1515,13 @@ extension MenuBarItemManager {
             return
         }
 
+        // The queue cancels an operation that ran past its deadline: don't
+        // start a move that the next operation would race.
+        guard TemporaryShowCancellation.startsMove(cancelled: Task.isCancelled) else {
+            logger.warning("Operation ran past its deadline, so not showing \(item.logString, privacy: .public)")
+            return
+        }
+
         appState.hidEventManager.stopAll()
         defer {
             appState.hidEventManager.startAll()
@@ -1529,13 +1536,10 @@ extension MenuBarItemManager {
             return
         }
 
-        // The queue cancels an operation that ran past its deadline, and the
-        // next one may already be planning with the slot empty: registering
-        // the context now would bring the interleaving back.
-        guard !Task.isCancelled else {
-            logger.warning("Operation ran past its deadline, so not registering \(item.logString, privacy: .public)")
-            return
-        }
+        // A finished move is always registered, even if the queue cancelled this
+        // operation meanwhile: the item is out of its place and only the context
+        // lets the rehide timer send it back. Cancellation only skips the click.
+        assert(TemporaryShowCancellation.registersContext(afterSuccessfulMove: Task.isCancelled))
 
         let context = TemporarilyShownItemContext(tag: item.tag, returnDestination: destination)
         temporarilyShownItemContexts.append(context)
@@ -1550,7 +1554,10 @@ extension MenuBarItemManager {
 
         // The item may have been sent back while it was moving (another
         // click, or the rehide timer): don't click an item that is hidden again.
-        guard !Task.isCancelled, temporarilyShownItemContexts.contains(where: { $0 === context }) else {
+        guard TemporaryShowCancellation.clicks(
+            cancelled: Task.isCancelled,
+            contextStillRegistered: temporarilyShownItemContexts.contains(where: { $0 === context })
+        ) else {
             logger.debug("Item was returned (or the operation cancelled) before the click, so not clicking \(item.logString, privacy: .public)")
             return
         }
