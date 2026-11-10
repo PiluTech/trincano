@@ -24,11 +24,13 @@ enum TemporarySlotPlan<Tag: Equatable> {
     ///   - clicked: The item the user clicked.
     ///   - needsSlot: Whether the clicked item is off screen.
     static func steps(shown: [Tag], clicked: Tag, needsSlot: Bool) -> [Step] {
+        // An item already in the slot is on screen: keep it and open it in
+        // place (sending it back first would press it off screen).
+        let isInSlot = shown.contains(clicked)
         // Most recently shown first, so each item returns to a position that
-        // is still valid. The clicked item returns too (and re-enters), which
-        // keeps its return destination computed from the real origin.
-        var steps = shown.reversed().map { Step.returnToOrigin($0) }
-        steps.append(needsSlot ? .showInSlot(clicked) : .openInPlace(clicked))
+        // is still valid.
+        var steps = shown.reversed().filter { $0 != clicked }.map { Step.returnToOrigin($0) }
+        steps.append(needsSlot && !isInSlot ? .showInSlot(clicked) : .openInPlace(clicked))
         return steps
     }
 }

@@ -77,6 +77,14 @@ extension MenuBarItemManager {
     /// pressed, is clicked in place. An item off screen is brought into view,
     /// clicked, and returned (see ``temporarilyShow(item:clickingWith:)``).
     func open(item: MenuBarItem, with mouseButton: CGMouseButton) async {
+        // Serialized: two quick clicks must not interleave their steps (the
+        // second sees the slot as the first left it).
+        await openQueue.run { [self] in
+            await performOpen(item: item, with: mouseButton)
+        }
+    }
+
+    private func performOpen(item: MenuBarItem, with mouseButton: CGMouseButton) async {
         let strategy = MenuBarItemOpenPlan.strategy(
             isOnScreen: Bridging.isWindowOnScreen(item.windowID),
             isLeftButton: mouseButton == .left
@@ -90,8 +98,8 @@ extension MenuBarItemManager {
         )
         for step in steps {
             switch step {
-            case .returnToOrigin:
-                await returnTemporarilyShownItemsNow()
+            case .returnToOrigin(let tag):
+                await returnTemporarilyShownItemNow(tag)
             case .showInSlot:
                 await temporarilyShow(item: item, clickingWith: mouseButton)
             case .openInPlace:

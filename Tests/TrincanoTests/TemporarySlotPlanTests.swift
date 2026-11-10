@@ -84,4 +84,62 @@ struct TemporarySlotPlanTests {
                 == [.returnToOrigin("B"), .returnToOrigin("A"), .showInSlot("C")]
         )
     }
+
+    // MARK: Real path: the item in the slot is on screen
+
+    @Test func reclickingTheItemInTheSlotKeepsItAndOpensInPlace() {
+        // The real caller computes needsSlot from the item being off screen:
+        // an item already in the slot is on screen, so needsSlot is false.
+        #expect(
+            Plan.steps(shown: ["A"], clicked: "A", needsSlot: false)
+                == [.openInPlace("A")]
+        )
+        // Even if the caller still says it needs the slot, A is not sent back.
+        #expect(
+            Plan.steps(shown: ["A"], clicked: "A", needsSlot: true)
+                == [.openInPlace("A")]
+        )
+    }
+
+    @Test func reclickingKeepsTheClickedAndReturnsTheOthers() {
+        #expect(
+            Plan.steps(shown: ["A", "B"], clicked: "B", needsSlot: false)
+                == [.returnToOrigin("A"), .openInPlace("B")]
+        )
+    }
+}
+
+@MainActor
+struct SerialAsyncQueueTests {
+    @Test func operationsDoNotInterleave() async {
+        let queue = SerialAsyncQueue()
+        let log = Log()
+
+        async let first: Void = queue.run {
+            log.add("A start")
+            await Task.yield()
+            await Task.yield()
+            log.add("A end")
+        }
+        async let second: Void = queue.run {
+            log.add("B start")
+            await Task.yield()
+            log.add("B end")
+        }
+        _ = await (first, second)
+
+        #expect(log.entries == ["A start", "A end", "B start", "B end"])
+    }
+
+    @Test func runsInSubmissionOrderAndReturnsTheValue() async {
+        let queue = SerialAsyncQueue()
+        let value = await queue.run { 42 }
+        #expect(value == 42)
+    }
+
+    @MainActor
+    final class Log {
+        var entries = [String]()
+        func add(_ entry: String) { entries.append(entry) }
+    }
 }
