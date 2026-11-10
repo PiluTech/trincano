@@ -32,6 +32,13 @@ enum MenuBarItemOpenPlan {
         var fallsBackToClick: Bool { self == .unavailable }
     }
 
+    /// Whether the click fallback runs after the press. The press already ended
+    /// (it is never stopped half way), but an operation cancelled past its
+    /// deadline while it ran must not start a new action afterwards.
+    static func shouldClickAfterPress(_ outcome: PressOutcome, isCancelled: Bool) -> Bool {
+        outcome.fallsBackToClick && !isCancelled
+    }
+
     /// Only an enabled `AXMenuBarItem` is pressed.
     static func isPressable(isMenuBarItem: Bool, isEnabled: Bool) -> Bool {
         isMenuBarItem && isEnabled

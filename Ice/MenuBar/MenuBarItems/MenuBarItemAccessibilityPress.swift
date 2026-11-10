@@ -110,8 +110,13 @@ extension MenuBarItemManager {
             case .showInSlot:
                 await temporarilyShow(item: item, clickingWith: mouseButton)
             case .openInPlace:
-                if strategy == .accessibilityPress, await !pressThroughAccessibility(item: item).fallsBackToClick {
-                    return
+                if strategy == .accessibilityPress {
+                    let outcome = await pressThroughAccessibility(item: item)
+                    // The press already ended; a cancellation that arrived during
+                    // it must not start the click fallback afterwards.
+                    guard MenuBarItemOpenPlan.shouldClickAfterPress(outcome, isCancelled: Task.isCancelled) else {
+                        return
+                    }
                 }
                 await clickInPlace(item: item, with: mouseButton)
             }
