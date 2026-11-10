@@ -68,4 +68,30 @@ struct DisplayProfilesTests {
         #expect(DisplayProfiles.decode(Data(#"{"modes":[1,2,3]}"#.utf8)) == DisplayProfiles())
         #expect(DisplayProfiles.decode(Data(#"[]"#.utf8)) == DisplayProfiles())
     }
+
+    @Test func uniqueConnectedUUIDUsesItsStoredMode() {
+        var profiles = DisplayProfiles()
+        profiles.set(.inline, for: "A")
+        #expect(profiles.effectiveMode(for: "A", connectedUUIDs: ["A", "B"]) == .inline)
+    }
+
+    @Test func duplicatedUUIDIgnoresAnOldStoredProfile() {
+        var profiles = DisplayProfiles()
+        profiles.set(.bar, for: "SAME")
+        // The UI says "follows the global setting" for this display; the
+        // runtime must agree.
+        #expect(profiles.effectiveMode(for: "SAME", connectedUUIDs: ["SAME", "SAME", "B"]) == .followGlobal)
+    }
+
+    @Test func missingUUIDFollowsTheGlobalSetting() {
+        var profiles = DisplayProfiles()
+        profiles.set(.bar, for: "A")
+        #expect(profiles.effectiveMode(for: nil, connectedUUIDs: [nil, "A"]) == .followGlobal)
+    }
+
+    @Test func uuidThatIsNotConnectedKeepsItsStoredModeWhenAsked() {
+        var profiles = DisplayProfiles()
+        profiles.set(.inline, for: "A")
+        #expect(profiles.effectiveMode(for: "A", connectedUUIDs: []) == .inline)
+    }
 }

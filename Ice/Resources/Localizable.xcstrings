@@ -464,6 +464,23 @@
         }
       }
     },
+    "Behind the notch": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Behind the notch"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atrás do notch"
+          }
+        }
+      }
+    },
     "Border": {
       "extractionState": "manual",
       "localizations": {
@@ -1314,6 +1331,23 @@
         }
       }
     },
+    "Hidden items": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hidden"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escondidos"
+          }
+        }
+      }
+    },
     "Hidden items on this display": {
       "extractionState": "manual",
       "localizations": {
@@ -1909,6 +1943,23 @@
         }
       }
     },
+    "No hidden items on this screen.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hidden items on this screen."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum item escondido nesta tela."
+          }
+        }
+      }
+    },
     "No items found for \"%@\"": {
       "extractionState": "manual",
       "localizations": {
@@ -2449,6 +2500,47 @@
           "stringUnit": {
             "state": "translated",
             "value": "Role ou deslize na barra de menus para mostrar os itens escondidos."
+          }
+        }
+      }
+    },
+    "Scroll to see all %lld items": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Scroll to see the item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Scroll to see all %lld items"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Role para ver o item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Role para ver os %lld itens"
+                }
+              }
+            }
           }
         }
       }

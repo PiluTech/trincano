@@ -23,6 +23,10 @@ final class IceBarPanel: NSPanel {
     /// the show begins (before any await).
     private var presentationTracker = BarPresentationTracker<MenuBarSection.Name>()
 
+    /// How the bar is presented on the current screen (standard bar, or the
+    /// extension that grows out of the notch).
+    private var presentationMode = NotchExtensionPresentation.Mode.standard
+
     /// Storage for internal observers.
     private var cancellables = Set<AnyCancellable>()
 
@@ -109,6 +113,12 @@ final class IceBarPanel: NSPanel {
     /// Updates the panel's frame origin for display on the given screen.
     private func updateOrigin(for screen: NSScreen) {
         guard let appState else {
+            return
+        }
+
+        // The extension is anchored to the notch, whatever the location setting.
+        if presentationMode == .notchExtension, let notch = screen.notchGeometry {
+            setFrameOrigin(NotchExtensionFrame.frame(size: frame.size, notch: notch.frame, screen: screen.frame).origin)
             return
         }
 
@@ -204,11 +214,17 @@ final class IceBarPanel: NSPanel {
             return
         }
 
+        presentationMode = NotchExtensionPresentation.mode(
+            notch: screen.notchGeometry,
+            isHiddenSection: section == .hidden
+        )
+
         contentView = IceBarHostingView(
             appState: appState,
             colorManager: colorManager,
             screen: screen,
-            section: section
+            section: section,
+            mode: presentationMode
         )
 
         updateOrigin(for: screen)
@@ -257,24 +273,40 @@ final class IceBarPanel: NSPanel {
 
 // MARK: - IceBarHostingView
 
-private final class IceBarHostingView: NSHostingView<IceBarContentView> {
+private final class IceBarHostingView: NSHostingView<AnyView> {
     override var safeAreaInsets: NSEdgeInsets { NSEdgeInsets() }
 
     init(
         appState: AppState,
         colorManager: IceBarColorManager,
         screen: NSScreen,
-        section: MenuBarSection.Name
+        section: MenuBarSection.Name,
+        mode: NotchExtensionPresentation.Mode
     ) {
-        let rootView = IceBarContentView(
-            appState: appState,
-            colorManager: colorManager,
-            itemManager: appState.itemManager,
-            imageCache: appState.imageCache,
-            menuBarManager: appState.menuBarManager,
-            screen: screen,
-            section: section
-        )
+        let rootView: AnyView = switch mode {
+        case .standard:
+            IceBarContentView(
+                appState: appState,
+                colorManager: colorManager,
+                itemManager: appState.itemManager,
+                imageCache: appState.imageCache,
+                menuBarManager: appState.menuBarManager,
+                screen: screen,
+                section: section
+            )
+            .erasedToAnyView()
+        case .notchExtension:
+            NotchExtensionContentView(
+                appState: appState,
+                colorManager: colorManager,
+                itemManager: appState.itemManager,
+                imageCache: appState.imageCache,
+                menuBarManager: appState.menuBarManager,
+                screen: screen,
+                section: section
+            )
+            .erasedToAnyView()
+        }
         super.init(rootView: rootView)
     }
 
@@ -284,7 +316,7 @@ private final class IceBarHostingView: NSHostingView<IceBarContentView> {
     }
 
     @available(*, unavailable)
-    required init(rootView: IceBarContentView) {
+    required init(rootView: AnyView) {
         fatalError("init(rootView:) has not been implemented")
     }
 
@@ -434,7 +466,7 @@ private struct IceBarContentView: View {
 
 // MARK: - IceBarItemView
 
-private struct IceBarItemView: View {
+struct IceBarItemView: View {
     @ObservedObject var imageCache: MenuBarItemImageCache
     @ObservedObject var itemManager: MenuBarItemManager
     @ObservedObject var menuBarManager: MenuBarManager

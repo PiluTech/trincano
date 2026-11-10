@@ -64,7 +64,7 @@ struct DisplayMapModelTests {
     @Test func aSingleDisplayIsScaledToFillTheMap() {
         let entries = DisplayMapModel.entries(for: [display(1, "A", frame: mac)], fitting: map)
         #expect(entries.count == 1)
-        #expect(entries[0].rect.height == map.height)
+        #expect(abs(entries[0].rect.height - map.height) < 0.001)
     }
 
     @Test func sameNamesGetOrdinalsAndUniqueNamesDoNot() {
@@ -118,5 +118,53 @@ struct DisplayMapModelTests {
         let entries = DisplayMapModel.entries(for: [display(1, "A", frame: mac, notch: true)], fitting: map)
         #expect(entries[0].pixelSize == mac.size)
         #expect(entries[0].hasNotch)
+    }
+
+    @Test func threeDisplaysKeepOrderFitAndDoNotOverlap() {
+        let third = CGRect(x: 4030, y: 0, width: 1920, height: 1080)
+        let entries = DisplayMapModel.entries(
+            for: [display(1, "A", frame: mac), display(2, "B", frame: studio), display(3, "C", frame: third)],
+            fitting: map
+        )
+        #expect(entries.map(\.position) == [1, 2, 3])
+        for entry in entries {
+            #expect(CGRect(origin: .zero, size: map).contains(entry.rect))
+        }
+        #expect(entries[0].rect.maxX <= entries[1].rect.minX)
+        #expect(entries[1].rect.maxX <= entries[2].rect.minX)
+    }
+
+    @Test func degenerateFittingNeverProducesANullRect() {
+        let frames = [display(1, "A", frame: mac), display(2, "B", frame: studio)]
+        for size in [CGSize.zero, CGSize(width: 0, height: 150), CGSize(width: 5, height: 5)] {
+            for entry in DisplayMapModel.entries(for: frames, fitting: size) {
+                #expect(!entry.rect.isNull, "\(size) -> \(entry.rect)")
+                #expect(!entry.rect.isInfinite)
+                #expect(entry.rect.width >= 0 && entry.rect.height >= 0)
+            }
+        }
+    }
+
+    @Test func zeroSizedDisplayFrameGivesNoEntries() {
+        #expect(DisplayMapModel.entries(for: [display(1, "A", frame: .zero)], fitting: map).isEmpty)
+    }
+
+    @Test func selectionKeepsTheCurrentDisplayWhileItIsConnected() {
+        #expect(DisplayMapModel.effectiveSelection(current: 2, connectedIDs: [1, 2, 3]) == 2)
+    }
+
+    @Test func selectionFallsBackToTheFirstWhenTheSelectedDisplayIsGone() {
+        #expect(DisplayMapModel.effectiveSelection(current: 9, connectedIDs: [4, 5]) == 4)
+        #expect(DisplayMapModel.effectiveSelection(current: nil, connectedIDs: [4, 5]) == 4)
+    }
+
+    @Test func selectionIsNilWithoutDisplays() {
+        #expect(DisplayMapModel.effectiveSelection(current: 1, connectedIDs: []) == nil)
+    }
+
+    @Test func mapIsShownOnlyWithTwoOrMoreDisplays() {
+        #expect(!DisplayMapModel.shouldShowMap(displayCount: 0))
+        #expect(!DisplayMapModel.shouldShowMap(displayCount: 1))
+        #expect(DisplayMapModel.shouldShowMap(displayCount: 2))
     }
 }
