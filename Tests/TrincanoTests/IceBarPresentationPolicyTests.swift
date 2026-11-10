@@ -23,4 +23,10 @@ struct IceBarPresentationPolicyTests {
     @Test func doesNotWaitForAnEmptySection() {
         #expect(IceBarPresentationPolicy.shouldWaitForRefresh(itemCount: 0, itemsWithImages: 0) == false)
     }
+
+    @Test func periodicRefreshCapturesOnlyWhileTheBarIsVisible() {
+        // A closed bar must not capture the screen every 5 s.
+        #expect(IceBarPresentationPolicy.shouldCaptureOnPeriodicRefresh(isBarVisible: false) == false)
+        #expect(IceBarPresentationPolicy.shouldCaptureOnPeriodicRefresh(isBarVisible: true))
+    }
 }

@@ -49,6 +49,7 @@ final class IceBarColorManager: ObservableObject {
                     else {
                         return
                     }
+                    updateWindowImage(for: screen)
                     updateColorInfo(with: iceBarPanel.frame, screen: screen)
                 }
                 .store(in: &c)
@@ -94,8 +95,8 @@ final class IceBarColorManager: ObservableObject {
                 else {
                     return
                 }
-                updateWindowImage(for: screen)
-                if iceBarPanel.isVisible {
+                if IceBarPresentationPolicy.shouldCaptureOnPeriodicRefresh(isBarVisible: iceBarPanel.isVisible) {
+                    updateWindowImage(for: screen)
                     withAnimation(Motion.animation(.color)) {
                         self.updateColorInfo(with: iceBarPanel.frame, screen: screen)
                     }
