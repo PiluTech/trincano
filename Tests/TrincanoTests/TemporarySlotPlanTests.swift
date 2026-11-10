@@ -131,6 +131,25 @@ struct SerialAsyncQueueTests {
         #expect(log.entries == ["A start", "A end", "B start", "B end"])
     }
 
+    @Test func aStuckOperationDoesNotBlockTheNextOne() async {
+        var timeouts = 0
+        let queue = SerialAsyncQueue(timeout: .milliseconds(50), onTimeout: { timeouts += 1 })
+        let log = Log()
+
+        async let stuck: Void = queue.run {
+            log.add("stuck start")
+            try? await Task.sleep(for: .milliseconds(400))
+            log.add("stuck end")
+        }
+        async let next: Void = queue.run {
+            log.add("next")
+        }
+        _ = await (stuck, next)
+
+        #expect(log.entries == ["stuck start", "next", "stuck end"])
+        #expect(timeouts == 1)
+    }
+
     @Test func runsInSubmissionOrderAndReturnsTheValue() async {
         let queue = SerialAsyncQueue()
         let value = await queue.run { 42 }

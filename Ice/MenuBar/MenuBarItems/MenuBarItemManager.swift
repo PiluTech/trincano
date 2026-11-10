@@ -34,7 +34,9 @@ final class MenuBarItemManager: ObservableObject {
     private var rehideTimer: Timer?
 
     /// Runs the clicks of the Trincano Bar one at a time.
-    let openQueue = SerialAsyncQueue()
+    lazy var openQueue = SerialAsyncQueue(onTimeout: { [logger] in
+        logger.warning("A menu bar item click ran past its deadline, so the next one goes on")
+    })
 
     /// Timestamp of the most recent menu bar item move operation.
     private var lastMoveOperationTimestamp: ContinuousClock.Instant?
@@ -1440,7 +1442,11 @@ extension MenuBarItemManager {
             }
             logger.debug("Rehide timer fired")
             Task {
-                await self.rehideTemporarilyShownItems()
+                // Through the same queue as the clicks, so the timer never
+                // returns an item in the middle of a click.
+                await self.openQueue.run {
+                    await self.rehideTemporarilyShownItems()
+                }
             }
         }
     }
@@ -1674,6 +1680,13 @@ extension MenuBarItemManager {
             )
             temporarilyShownItemContexts.append(contentsOf: failedContexts.reversed())
             runRehideTimer(for: 3)
+        }
+
+        if RehideTimerPlan.needsRearm(
+            remainingItems: temporarilyShownItemContexts.count,
+            timerIsScheduled: rehideTimer?.isValid ?? false
+        ) {
+            runRehideTimer()
         }
     }
 
