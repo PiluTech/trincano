@@ -580,6 +580,13 @@ final class ControlItem {
         return menu
     }
 
+    #if DEBUG
+    /// Monta o menu do ícone para o modo de captura (só Debug).
+    func makeMenuForCapture(with appState: AppState) -> NSMenu {
+        createMenu(with: appState)
+    }
+    #endif
+
     /// Shows the control item's menu.
     private func showMenu() {
         guard let appState else {

@@ -16,12 +16,13 @@ O plano das 7 fases foi concluído (a fase 7, Swift 6, entrou pelo PR #12); veja
 - [docs/fase-6-acabamento.md](docs/fase-6-acabamento.md): localização PT-BR/en, movimento reduzido, VoiceOver e propostas de ícone.
 - [docs/rodada-design/README.md](docs/rodada-design/README.md): rodada de design do Fable (Sobre B, Busca A, Organização A, Geral B, Barra B), PR a PR, com roteiro ao vivo.
 - [docs/pendencias.md](docs/pendencias.md): pendências da revisão do Lupa (XPC, chave local, importação, limpeza).
+- [docs/prints/README.md](docs/prints/README.md): prints do catálogo com fixture (modo de captura só Debug, `scripts/capture-prints.sh`).
 
 ## Comandos
 - `scripts/check.sh`: swiftlint (`--strict`) + testes + build Release. Tudo local (CI do GitHub sem minutos).
 - `scripts/build.sh [Release|Debug]`: build assinado (`SIGN_IDENTITY` para trocar o certificado). Saída em `build/`.
 - `scripts/install.sh`: `ditto` para `/Applications/Trincano.app`; nunca fecha o Ice, só avisa. Avise o Paulo antes (`maestri notify`).
-- `scripts/measure-signposts.py`, `scripts/measure-idle.sh`: medição. `scripts/generate-icons.sh`: regenera os PNGs do ícone. `scripts/extract-strings.py check`: catálogo PT-BR.
+- `scripts/measure-signposts.py`, `scripts/measure-idle.sh`: medição. `scripts/generate-icons.sh`: regenera os PNGs do ícone (glifos de template transparentes por `scripts/render-glyph.swift`; teste confere cantos transparentes). Toggle "Abrir ao iniciar sessão" usa a chave própria `Launch at login` do catálogo (o pacote LaunchAtLogin não tem pt-BR). `scripts/extract-strings.py check`: catálogo PT-BR.
 - Testes: `xcodebuild -project Ice.xcodeproj -scheme TrincanoTests -destination 'platform=macOS' test`. Lógica pura vai em `Ice/Utilities/Pure/` ou `Shared/Utilities/` (compilada direto no alvo de testes; sem host). Recriar o alvo: `ruby scripts/add-test-target.rb`.
 
 ## Regras
@@ -31,6 +32,7 @@ O plano das 7 fases foi concluído (a fase 7, Swift 6, entrou pelo PR #12); veja
 - Swift 6 com concorrência estrita (zero avisos); `@unchecked Sendable`/`nonisolated(unsafe)`/`assumeIsolated` só com a invariante comentada. Interface em PT-BR e en (String Catalog); texto novo entra no catálogo.
 - Extensão do notch (Barra em tela com notch): ancorada no notch, ignora o local (ponteiro/ícone) e o estilo de aparência da Barra; tamanho real do painel = conteúdo + `outerInset` (`NotchExtensionFrame`).
 - Clique num ícone da Barra/painel do notch (`MenuBarItemManager.open`, plano em `MenuBarItemOpenPlan`): item na tela (inclusive atrás do notch) abre o menu por Acessibilidade (`AXPress` no `AXExtrasMenuBar` do app dono, casado pelo frame), sem mover o item; clique direito ou falha do `AXPress` cai no clique sintético; item fora da tela (Hidden) segue mover → clicar → devolver (`temporarilyShow`), pois o menu nasce ancorado no item e ficaria fora da tela. Há um único "lugar temporário" (`TemporarySlotPlan`): clicar em outro ícone devolve primeiro o anterior (`rehideTemporarilyShownItems(force:)`, sem esperar) e o novo ocupa o mesmo lugar, sem empilhar; reclicar o item que já está no lugar o mantém e abre no lugar; os cliques e o disparo do timer de rehide passam por `SerialAsyncQueue` (sem intercalar, prazo de 5 s por operação, com cancelamento cooperativo: a operação lenta é cancelada e `temporarilyShow` checa `Task.isCancelled` antes do move e antes do clique, mas o move roda protegido do cancelamento (Task não filha) e um move concluído SEMPRE registra o contexto, senão o item ficaria desescondido de vez; `TemporaryShowCancellation`). Por isso pode haver, brevemente, 2 itens no lugar temporário (B planeja enquanto o move blindado de A termina); o timer devolve os dois. O `performOpen` só para ENTRE os passos quando cancelado, nunca no meio de um passo (exceção única: no passo `.openInPlace`, cancelada depois do `AXPress` não faz o clique de fallback, `MenuBarItemOpenPlan.shouldClickAfterPress`) e um retorno parcial rearma o timer (`RehideTimerPlan`) e o rehide forçado nunca devolve item com o menu aberto. A Busca ainda usa o clique sintético.
+- Prints: `TRINCANO_CAPTURE_DIR` liga o modo de captura (só `#if DEBUG`): fixture sem setup real, sem dado pessoal; use `scripts/capture-prints.sh`. Qualquer varredura nova da barra real deve respeitar `CaptureFixture.isActive`.
 - Bug: teste que falha primeiro. Lint limpo. Atualizar este arquivo e o `AGENTS.md` (idêntico) a cada fluxo novo.
 
 ## Página do catálogo (PRODUTO.md)

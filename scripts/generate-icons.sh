@@ -2,7 +2,7 @@
 # Gera os PNGs do ícone do app e dos glifos da barra de menus a partir dos SVG em
 # docs/identidade/icone/ e registra o SHA-256 dos PNGs do app em docs/identidade/icone/SHA256SUMS
 # (o IconAssetsTests confere esse registro, a cor e a ausência de arquivos órfãos).
-# Requer: qlmanage e sips (já vêm no macOS).
+# Requer: qlmanage (ícone do app), sips e swift (já vêm no macOS / Xcode).
 set -euo pipefail
 cd "${0:A:h}/.."
 SRC=docs/identidade/icone
@@ -29,9 +29,7 @@ render_glyph() {  # svg  nome-do-imageset
   for pair in "18 " "36 @2x" "54 @3x"; do
     local px=${pair%% *} suffix=${pair#* }
     [[ "$suffix" == "$pair" ]] && suffix=""
-    mkdir -p "$TMP/g$px"
-    qlmanage -t -s "$px" -o "$TMP/g$px" "$svg" >/dev/null 2>&1
-    cp "$TMP/g$px/$(basename "$svg").png" "$dir/$name$suffix.png"
+    swift scripts/render-glyph.swift "$svg" "$px" "$dir/$name$suffix.png"
   done
 }
 render_glyph "$SRC/opcao2-barra-escondido.svg" FrostBarFill

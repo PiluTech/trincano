@@ -435,6 +435,12 @@ extension MenuBarItemManager {
     }
 
     private func performCacheItemsRegardless(_ currentItemWindowIDs: [CGWindowID]?) async {
+        #if DEBUG
+        // No modo de captura a fixture é a única fonte de itens: nada de varredura real.
+        if CaptureFixture.isActive {
+            return
+        }
+        #endif
         await cacheActor.runCacheTask { [weak self] in
             guard let self else {
                 return
@@ -2018,3 +2024,14 @@ private extension Logger {
     /// Logger for the menu bar item manager.
     static let menuBarItemManager = Logger(category: "MenuBarItemManager")
 }
+
+#if DEBUG
+// MARK: - Capture Fixture
+
+extension MenuBarItemManager {
+    /// Instala o cache de itens fictícios do modo de captura (só Debug).
+    func installCaptureFixture(_ cache: ItemCache) {
+        itemCache = cache
+    }
+}
+#endif

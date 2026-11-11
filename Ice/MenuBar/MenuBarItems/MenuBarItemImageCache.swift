@@ -264,6 +264,12 @@ final class MenuBarItemImageCache: ObservableObject {
     }
 
     private func performUpdateCacheWithoutChecks(sections: [MenuBarSection.Name]) async {
+        #if DEBUG
+        // No modo de captura as imagens são as da fixture: nada de captura real.
+        if CaptureFixture.isActive {
+            return
+        }
+        #endif
         guard
             let appState,
             appState.hasPermission(.screenRecording)
@@ -398,3 +404,14 @@ final class MenuBarItemImageCache: ObservableObject {
         return true
     }
 }
+
+#if DEBUG
+// MARK: - Capture Fixture
+
+extension MenuBarItemImageCache {
+    /// Instala as imagens fictícias do modo de captura (só Debug).
+    func installCaptureFixture(_ newImages: [MenuBarItemTag: CapturedImage]) {
+        images = newImages
+    }
+}
+#endif
