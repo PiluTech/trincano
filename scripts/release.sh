@@ -64,11 +64,9 @@ if [[ -n "$(git status --porcelain --untracked-files=no)" && -z "${ALLOW_DIRTY:-
 fi
 COMMIT="$(git rev-parse HEAD)"
 TAG="v$VERSION"
-if git rev-parse -q --verify "refs/tags/$TAG^{commit}" >/dev/null && [[ "$(git rev-parse "$TAG^{commit}")" == "$COMMIT" ]]; then
-  TAGINFO="tag $TAG"
-else
-  TAGINFO="commit $COMMIT (crie a tag $TAG neste commit)"
-fi
+[[ "$(git rev-parse -q --verify "refs/tags/$TAG^{commit}" || true)" == "$COMMIT" ]] \
+  || die "a tag $TAG precisa existir e apontar para o HEAD ($COMMIT); crie a tag antes do release"
+SHORT="$(git rev-parse --short HEAD)"
 DMG="$OUT/$APP_NAME-$VERSION.dmg"
 rm -rf "$OUT"; mkdir -p "$OUT"
 
@@ -132,8 +130,7 @@ Trincano: https://github.com/PiluVitu/trincano. Código-fonte aberto, mesma lice
 Para instalar, arraste o Trincano para a pasta Applications.
 Sem telemetria e sem acesso à rede.
 
-Código-fonte desta versão (GPL): https://github.com/PiluVitu/trincano
-Commit: $COMMIT ($TAGINFO)
+Versão $VERSION · código: https://github.com/PiluVitu/trincano/tree/$TAG (commit $SHORT)
 
 Permissões: ao instalar o Trincano pela primeira vez (ou trocando a assinatura), conceda
 Acessibilidade e Gravação de Tela de novo em Ajustes do Sistema > Privacidade e Segurança.
@@ -157,5 +154,5 @@ if [[ -z "${SKIP_NOTARIZE:-}" ]]; then
 else
   echo "AVISO: SKIP_NOTARIZE ativo; este .dmg não está notarizado."
 fi
-printf 'Trincano %s\ncommit: %s\n%s\nsha256: %s\n' "$VERSION" "$COMMIT" "$TAGINFO" "$(shasum -a 256 "$DMG" | cut -d' ' -f1)" > "$DMG.source.txt"
+printf 'Trincano %s\ncommit: %s\n%s\nsha256: %s\n' "$VERSION" "$COMMIT" "tag $TAG" "$(shasum -a 256 "$DMG" | cut -d' ' -f1)" > "$DMG.source.txt"
 echo "OK: $DMG"

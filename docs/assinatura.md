@@ -25,7 +25,7 @@ O que o script faz, em ordem:
 
 Saída: `build/release/Trincano-<versão>.dmg`. O crédito ao Ice também está na tela Sobre.
 
-- O script recusa versão com `-dev` ou fora de `X.Y.Z` (`MARKETING_VERSION`), recusa working tree sujo e grava o commit (e a tag `v<versão>`, ou o aviso para criá-la) no `LEIA-ME.txt` do .dmg e em `<dmg>.source.txt` ao lado dele (GPL). Ctrl-C/TERM apaga a chave temporária e aborta (exit 130).
+- O script recusa versão com `-dev` ou fora de `X.Y.Z` (`MARKETING_VERSION`), recusa working tree sujo e exige a tag `v<versão>` apontando para o HEAD (crie-a antes) e grava versão, link da tag e commit curto no `LEIA-ME.txt` do .dmg e em `<dmg>.source.txt` ao lado dele (GPL). Ctrl-C/TERM apaga a chave temporária e aborta (exit 130).
 - A leitura do Team ID que falha (erro de API) NÃO cai para `signing-identifier`: a política falha fechada em "mesmo time" (`XPCPeerPolicy.TeamLookup.failed`).
 - `DEVELOPER_ID` escolhe a identidade (padrão: a única "Developer ID Application" do keychain). `SKIP_BUILD=1` reaproveita o build; `SKIP_NOTARIZE=1` só assina (não serve para distribuir).
 - **Segredos:** nada no repo. A chave `.p8` da App Store Connect API é lida do 1Password na hora (`op read`) para um arquivo temporário `chmod 600`, apagado ao sair (`trap`, inclusive em erro); `NOTARY_KEY_FILE` aceita um `.p8` existente. Key ID e Issuer vêm do ambiente.
