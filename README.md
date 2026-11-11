@@ -16,6 +16,10 @@ Trincano is a menu bar manager for macOS, with a focus on Macs with a notch and 
 
 Everything stays on your Mac. Trincano has no telemetry, no analytics and **no network access**: it does not check for updates (the update system of Ice was removed). It needs two permissions to work: Accessibility and Screen Recording (used only to read the position and image of menu bar items).
 
+## Download and permissions
+
+Releases are `.dmg` files signed with a Developer ID and notarized by Apple (see [docs/assinatura.md](docs/assinatura.md)); each one records the source commit/tag (GPL). The signature differs from the local-certificate build, so **Accessibility and Screen Recording must be granted again** in System Settings > Privacy & Security the first time you open a release.
+
 ## Build and install
 
 Requires Xcode 26 and macOS 26. There are no prebuilt releases.

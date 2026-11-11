@@ -1,6 +1,6 @@
 # Pendências (revisão do Lupa, PR #1)
 
-Veredito do Lupa: PR #1 (3ff4ef9) pode seguir para **uso pessoal**, **não** está pronto para distribuição. Itens abaixo ficam para as próximas fases.
+Veredito do Lupa: PR #1 (3ff4ef9) pode seguir para **uso pessoal**. Desde o PR #27 há distribuição com Developer ID/notarização (`scripts/release.sh`); com Team ID o limite do XPC abaixo some (a leitura do time falhando agora cai para "mesmo time", fechado). Itens abaixo ficam para as próximas fases.
 
 ## XPC (app ↔ MenuBarItemService)
 - Sem Team ID o requisito é só `signing-identifier`, que não prova o certificado. Caminhos:

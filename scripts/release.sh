@@ -57,13 +57,26 @@ fi
 codesign -d -r- "$APP" 2>&1 | grep designated
 
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$APP/Contents/Info.plist")"
+[[ "$VERSION" == *-dev* ]] && die "versão de release não pode ter -dev (atual: $VERSION); ajuste MARKETING_VERSION"
+[[ "$VERSION" =~ '^[0-9]+\.[0-9]+\.[0-9]+$' ]] || die "versão fora do formato X.Y.Z: $VERSION"
+if [[ -n "$(git status --porcelain --untracked-files=no)" && -z "${ALLOW_DIRTY:-}" ]]; then
+  die "working tree com mudanças: faça commit antes (o binário precisa corresponder a um commit)"
+fi
+COMMIT="$(git rev-parse HEAD)"
+TAG="v$VERSION"
+if git rev-parse -q --verify "refs/tags/$TAG^{commit}" >/dev/null && [[ "$(git rev-parse "$TAG^{commit}")" == "$COMMIT" ]]; then
+  TAGINFO="tag $TAG"
+else
+  TAGINFO="commit $COMMIT (crie a tag $TAG neste commit)"
+fi
 DMG="$OUT/$APP_NAME-$VERSION.dmg"
 rm -rf "$OUT"; mkdir -p "$OUT"
 
 # --- Notarização ----------------------------------------------------------------
 KEYTMP=""
 cleanup() { [[ -n "$KEYTMP" ]] && rm -f "$KEYTMP"; return 0; }
-trap cleanup EXIT INT TERM
+trap cleanup EXIT
+trap 'cleanup; exit 130' INT TERM
 
 notary_args=()
 prepare_notary() {
@@ -118,6 +131,12 @@ Trincano: https://github.com/PiluVitu/trincano. Código-fonte aberto, mesma lice
 
 Para instalar, arraste o Trincano para a pasta Applications.
 Sem telemetria e sem acesso à rede.
+
+Código-fonte desta versão (GPL): https://github.com/PiluVitu/trincano
+Commit: $COMMIT ($TAGINFO)
+
+Permissões: ao instalar o Trincano pela primeira vez (ou trocando a assinatura), conceda
+Acessibilidade e Gravação de Tela de novo em Ajustes do Sistema > Privacidade e Segurança.
 TXT
 hdiutil create -volname "$APP_NAME" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null
 rm -rf "$STAGE"
@@ -138,4 +157,5 @@ if [[ -z "${SKIP_NOTARIZE:-}" ]]; then
 else
   echo "AVISO: SKIP_NOTARIZE ativo; este .dmg não está notarizado."
 fi
+printf 'Trincano %s\ncommit: %s\n%s\nsha256: %s\n' "$VERSION" "$COMMIT" "$TAGINFO" "$(shasum -a 256 "$DMG" | cut -d' ' -f1)" > "$DMG.source.txt"
 echo "OK: $DMG"
