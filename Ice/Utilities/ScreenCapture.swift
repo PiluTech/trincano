@@ -38,7 +38,19 @@ enum ScreenCapture {
     /// result with a newly computed value.
     private static let cachedPermissionResult = OSAllocatedUnfairLock<Bool?>(initialState: nil)
 
+    #if DEBUG
+    /// Marca a permissão como concedida no modo de captura (só Debug).
+    static func overrideCachedPermissionsForCapture() {
+        cachedPermissionResult.withLock { $0 = true }
+    }
+    #endif
+
     static func cachedCheckPermissions(reset: Bool = false) -> Bool {
+        #if DEBUG
+        if CaptureFixture.isActive {
+            return true
+        }
+        #endif
         if !reset, let result = cachedPermissionResult.withLock({ $0 }) {
             return result
         }

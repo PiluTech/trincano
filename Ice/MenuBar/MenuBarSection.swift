@@ -165,6 +165,11 @@ final class MenuBarSection {
 
     /// A Boolean value that indicates whether the section is enabled.
     var isEnabled: Bool {
+        #if DEBUG
+        if CaptureFixture.isActive {
+            return true
+        }
+        #endif
         if case .visible = name {
             // The visible section should always be enabled.
             return true

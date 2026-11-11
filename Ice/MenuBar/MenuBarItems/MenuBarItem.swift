@@ -160,6 +160,19 @@ struct MenuBarItem: CustomStringConvertible {
         "<\(tag) (windowID: \(windowID))>"
     }
 
+    #if DEBUG
+    /// Cria um item fictício para o modo de captura dos prints (só Debug).
+    init(captureFixtureTag tag: MenuBarItemTag, windowID: CGWindowID, ownerPID: pid_t, bounds: CGRect, title: String) {
+        self.tag = tag
+        self.windowID = windowID
+        self.ownerPID = ownerPID
+        self.sourcePID = nil
+        self.bounds = bounds
+        self.title = title
+        self.isOnScreen = true
+    }
+    #endif
+
     /// Creates a menu bar item without checks.
     ///
     /// This initializer does not perform validity checks on its parameters.

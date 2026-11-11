@@ -16,6 +16,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
         // Initial chore work.
         NSSplitViewItem.swizzle()
+        #if DEBUG
+        // Modo de captura: não importa nem migra preferências.
+        if CaptureFixture.isActive {
+            return
+        }
+        #endif
         IceSettingsImporter.offerImportIfNeeded()
         MigrationManager(appState: appState).migrateAll()
     }
@@ -34,6 +40,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         #if DEBUG
         // Don't perform setup if running as a preview.
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            return
+        }
+
+        // Modo de captura (prints do catálogo): fixture no lugar do setup real.
+        if CaptureFixture.isActive {
+            CaptureFixture.start(appState: appState)
             return
         }
         #endif
