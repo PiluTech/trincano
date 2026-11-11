@@ -9,13 +9,26 @@ Sem Developer ID o app seria assinado ad hoc, e o cdhash muda a cada build: o ma
 - Recriar o certificado muda o hash e **pede as permissões de novo**; não apague o keychain sem necessidade.
 - O certificado não é confiável para o sistema (não passa no Gatekeeper para outros Macs). Serve só para uso local.
 
-## Trocar pelo Developer ID (quando a aprovação sair)
+## Distribuição: Developer ID + notarização (`scripts/release.sh`)
+
+O Trincano é distribuído **fora da Mac App Store** (GPL-3 e Acessibilidade/XPC não cabem na loja), como `.dmg` assinado com Developer ID e notarizado, para download em pilutech.com.br. Publicar no site é um passo à parte (exige OK do Paulo); o script só gera o arquivo.
 
 ```sh
-SIGN_IDENTITY="Developer ID Application: Nome (TEAMID)" SIGN_KEYCHAIN="" scripts/build.sh
+NOTARY_KEY_ID=<key id> NOTARY_ISSUER=<issuer id> NOTARY_OP_REF='op://<cofre>/<item>/.../p8' scripts/release.sh
 ```
 
-`SIGN_KEYCHAIN=""` usa os keychains normais. Para distribuir fora do Mac será preciso notarizar (`notarytool`), o que não faz parte da fase 1. Com Team ID a checagem do XPC volta sozinha para "mesmo time".
+O que o script faz, em ordem:
+1. Compila Release (via `~/.maestri-local/build-slot.sh` se existir) e assina de **dentro para fora**, sem `--deep`: `MenuBarItemService.xpc`, depois o app, com `--timestamp --options runtime`. **Sem entitlements** (Acessibilidade e Gravação de Tela são TCC, não entitlement). Confere o runtime reforçado e a ausência de `get-task-allow`.
+2. Notariza o app (`notarytool submit --wait`) e grampeia (`stapler staple`).
+3. Monta o `.dmg` (Trincano.app, atalho Applications, `LICENSE` GPL-3 e `LEIA-ME.txt` com o crédito ao Ice/Jordan Baird), assina, notariza, grampeia e valida.
+4. Verifica com `spctl -a -vv` (dmg e app montado) e `codesign --verify --deep --strict`.
+
+Saída: `build/release/Trincano-<versão>.dmg`. O crédito ao Ice também está na tela Sobre.
+
+- `DEVELOPER_ID` escolhe a identidade (padrão: a única "Developer ID Application" do keychain). `SKIP_BUILD=1` reaproveita o build; `SKIP_NOTARIZE=1` só assina (não serve para distribuir).
+- **Segredos:** nada no repo. A chave `.p8` da App Store Connect API é lida do 1Password na hora (`op read`) para um arquivo temporário `chmod 600`, apagado ao sair (`trap`, inclusive em erro); `NOTARY_KEY_FILE` aceita um `.p8` existente. Key ID e Issuer vêm do ambiente.
+- Com Team ID a checagem do XPC volta sozinha para "mesmo time e signing identifier" (ver abaixo); o build local continua com o certificado "Trincano Local Signing".
+- O build notarizado compartilha o bundle id com o instalado: não abrir um por cima do outro sem avisar o Paulo. Validar em runtime o Menu Bar Layout com a política "mesmo time" ainda é pendência de teste ao vivo.
 
 ## Checagem do canal XPC (app ↔ MenuBarItemService)
 
