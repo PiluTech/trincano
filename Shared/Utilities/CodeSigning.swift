@@ -7,23 +7,28 @@ import Security
 import XPC
 
 enum CodeSigningInfo {
-    /// The team identifier of the current process, or `nil` if the
-    /// process is ad hoc signed or signed with a local certificate.
-    static var teamIdentifier: String? {
+    /// The team identifier of the current process. `.none` only when the
+    /// signature was read and has no team (local certificate or ad hoc);
+    /// any failure reading it is `.failed` so the policy fails closed.
+    static var teamLookup: XPCPeerPolicy.TeamLookup {
         var code: SecCode?
         guard SecCodeCopySelf([], &code) == errSecSuccess, let code else {
-            return nil
+            return .failed
         }
         var staticCode: SecStaticCode?
         guard SecCodeCopyStaticCode(code, [], &staticCode) == errSecSuccess, let staticCode else {
-            return nil
+            return .failed
         }
         var info: CFDictionary?
         let flags = SecCSFlags(rawValue: kSecCSSigningInformation)
-        guard SecCodeCopySigningInformation(staticCode, flags, &info) == errSecSuccess else {
-            return nil
+        guard SecCodeCopySigningInformation(staticCode, flags, &info) == errSecSuccess,
+              let dict = info as? [String: Any] else {
+            return .failed
         }
-        return (info as? [String: Any])?[kSecCodeInfoTeamIdentifier as String] as? String
+        if let team = dict[kSecCodeInfoTeamIdentifier as String] as? String {
+            return .team(team)
+        }
+        return .none
     }
 }
 
@@ -33,7 +38,7 @@ extension XPCPeerRequirement {
     /// `signingIdentifier`, chosen by ``XPCPeerPolicy``.
     static func trincanoPeer(signingIdentifier: String) -> XPCPeerRequirement {
         switch XPCPeerPolicy.make(
-            teamIdentifier: CodeSigningInfo.teamIdentifier,
+            teamLookup: CodeSigningInfo.teamLookup,
             peerSigningIdentifier: signingIdentifier
         ) {
         case .sameTeam(let identifier):
