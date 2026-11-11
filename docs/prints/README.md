@@ -30,6 +30,8 @@ O script compila o Debug com outro bundle id (`br.com.pilutech.trincano.capture`
 
 ## Conferir antes de publicar
 
-Abra cada PNG: nada de app real, nome, notificação ou barra de menus. Metadados: `strings <png> | grep -iE 'xmp|exif|screenshot'` deve vir vazio.
+Abra cada PNG: nada de app real, nome, notificação ou barra de menus. Metadados: `scripts/check-prints.py` (roda sozinho no fim do `capture-prints.sh`) confere que cada PNG só tem os chunks IHDR, sRGB, IDAT e IEND; `strings <png> | grep -iE 'xmp|exif|screenshot'` deve vir vazio.
+
+**O 05 (menu) é diferente dos outros.** As outras quatro cenas são capturadas por janela (`screencapture -l`), então só o conteúdo do Trincano entra. O menu em tracking não se isola por janela, então o 05 é capturado por **região da tela** (`screencapture -R`): tudo que estiver nesse retângulo entra na imagem, inclusive um banner de notificação do sistema, um alerta ou outra janela por cima. Ao regerar, **abra o `05-menu-do-trincano.png` e confira a imagem**; se tiver algo estranho, feche o que for e rode de novo. O `check-prints.py` só vê a estrutura do PNG, não o conteúdo.
 
 Código: `Ice/Utilities/CaptureFixture.swift`, catálogo puro em `Ice/Utilities/Pure/CaptureFixtureCatalog.swift`.

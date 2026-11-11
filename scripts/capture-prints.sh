@@ -38,3 +38,5 @@ while i < len(data):
 open(path, "wb").write(b"".join(out))
 PY
 done
+
+python3 -I scripts/check-prints.py "$OUT"
