@@ -1,6 +1,6 @@
 # Trincano: estado ao fim do plano (2026-11-07)
 
-Fork do Ice (GPL-3.0) para o Mac do Paulo (MacBook Air M4 com notch, macOS 26 Tahoe). Uso pessoal; **não** está pronto para distribuição (sem Developer ID/notarização, XPC com limite conhecido).
+Fork do Ice (GPL-3.0) para o Mac do Paulo (MacBook Air M4 com notch, macOS 26 Tahoe). Distribuído como .dmg com Developer ID e notarizado (`scripts/release.sh`, ver `docs/assinatura.md`); o limite do XPC some com Team ID.
 
 ## As 7 fases (PRs no fork `PiluVitu/trincano`)
 | Fase | O que entregou | PR |

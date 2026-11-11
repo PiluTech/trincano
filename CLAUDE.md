@@ -3,7 +3,7 @@
 Fork do [Ice](https://github.com/jordanbaird/Ice) (jordanbaird, GPL-3.0) com suporte ao macOS 26 e foco em Macs com notch. Base: `upstream/macos-26`. Remoto `origin` = PiluVitu/trincano (público), `upstream` = jordanbaird/Ice. PRs só contra a `main` do fork, nunca contra o upstream.
 
 ## Estado
-O plano das 7 fases foi concluído (a fase 7, Swift 6, entrou pelo PR #12); veja [docs/estado-atual.md](docs/estado-atual.md) (resumo, números de referência e a lista de **pendências abertas**). Uso pessoal; não distribuir (sem Developer ID/notarização).
+O plano das 7 fases foi concluído (a fase 7, Swift 6, entrou pelo PR #12); veja [docs/estado-atual.md](docs/estado-atual.md) (resumo, números de referência e a lista de **pendências abertas**). Distribuição fora da App Store: `.dmg` com Developer ID, notarizado e grampeado por `scripts/release.sh` (ver [docs/assinatura.md](docs/assinatura.md)); publicar no site exige OK do Paulo.
 
 ## Índice de documentação (`docs/`)
 - [docs/estado-atual.md](docs/estado-atual.md): estado final, fases e PRs, pendências abertas.
@@ -21,6 +21,7 @@ O plano das 7 fases foi concluído (a fase 7, Swift 6, entrou pelo PR #12); veja
 ## Comandos
 - `scripts/check.sh`: swiftlint (`--strict`) + testes + build Release. Tudo local (CI do GitHub sem minutos).
 - `scripts/build.sh [Release|Debug]`: build assinado (`SIGN_IDENTITY` para trocar o certificado). Saída em `build/`.
+- `scripts/release.sh`: build Release assinado com Developer ID (XPC e app, runtime reforçado, sem entitlements) + `.dmg` (LICENSE e crédito ao Ice) + `notarytool` + `stapler` + `spctl`; saída em `build/release/`. Precisa de `NOTARY_KEY_ID`, `NOTARY_ISSUER` e `NOTARY_OP_REF` (chave `.p8` lida do 1Password para arquivo temporário 600, nunca no repo/log).
 - `scripts/install.sh`: `ditto` para `/Applications/Trincano.app`; nunca fecha o Ice, só avisa. Avise o Paulo antes (`maestri notify`).
 - `scripts/measure-signposts.py`, `scripts/measure-idle.sh`: medição. `scripts/generate-icons.sh`: regenera os PNGs do ícone (glifos de template transparentes por `scripts/render-glyph.swift`; teste confere cantos transparentes). Toggle "Abrir ao iniciar sessão" usa a chave própria `Launch at login` do catálogo (o pacote LaunchAtLogin não tem pt-BR). `scripts/extract-strings.py check`: catálogo PT-BR.
 - Testes: `xcodebuild -project Ice.xcodeproj -scheme TrincanoTests -destination 'platform=macOS' test`. Lógica pura vai em `Ice/Utilities/Pure/` ou `Shared/Utilities/` (compilada direto no alvo de testes; sem host). Recriar o alvo: `ruby scripts/add-test-target.rb`.
