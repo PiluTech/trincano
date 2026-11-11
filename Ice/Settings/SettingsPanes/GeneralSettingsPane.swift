@@ -55,7 +55,7 @@ struct GeneralSettingsPane: View {
 
     @ViewBuilder
     private var appOptions: some View {
-        LaunchAtLogin.Toggle()
+        LaunchAtLogin.Toggle(LocalizedStringKey("Launch at login"))
     }
 
     // MARK: Ice Icon Options

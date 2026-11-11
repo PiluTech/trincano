@@ -17,6 +17,6 @@ Ranking do designer (1 = melhor): leitura a 18 pt: opção 2 em 1º; distinção
 O desenho é original do Trincano (proposta do subagente `designer`, 2026), sob a mesma licença do projeto (GPL-3.0). O ícone do Ice não é usado nos assets novos; o imageset `IceCube` permanece só para decodificar preferências antigas.
 
 ## Geração e verificação
-- `scripts/generate-icons.sh` renderiza os SVG de `icone/` nos 10 PNGs do `AppIcon.appiconset` e nos glifos `FrostBar*` e grava `icone/SHA256SUMS`.
+- `scripts/generate-icons.sh` renderiza os SVG de `icone/` nos 10 PNGs do `AppIcon.appiconset` (via `qlmanage`/`sips`) e nos glifos `FrostBar*` (via `scripts/render-glyph.swift`, AppKit, fundo transparente; o `qlmanage` não serve para o glifo: sai opaco e sem o desenho) e grava `icone/SHA256SUMS`.
 - Verificações (todas em `scripts/check.sh`): `IconAssetsTests` (tamanhos/alfa, **cor média do ícone** clara e menta, não o azul-marinho do Ice, **hashes** dos PNGs iguais ao registro, nenhum arquivo órfão no `.appiconset`, todos os arquivos do `Contents.json` existem), `ControlItemIconMigrationTests` (só `iceCube` vira `frostBar`) e `scripts/check-icon-bundle.swift` (no app compilado, `NSImage.isTemplate == true` e 18x18 pt).
 - Histórico: numa primeira versão o gerador gravou o ícone num arquivo `.png` órfão e o `Contents.json` continuou apontando para a arte do Ice; os testes de proveniência acima existem para isso não se repetir.

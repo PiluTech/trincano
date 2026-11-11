@@ -59,6 +59,12 @@ struct LocalizationCatalogTests {
         }
     }
 
+    @Test func launchAtLoginToggleIsTranslated() throws {
+        // `LaunchAtLogin.Toggle()` uses the package's own English title, which has no pt-BR: the app passes this key.
+        let entry = try #require(try loadCatalog().strings["Launch at login"], "key missing from the catalog")
+        #expect(portuguese(entry)?.isEmpty == false)
+    }
+
     @Test func placeholdersMatchBetweenEnglishAndPortuguese() throws {
         for (key, entry) in try loadCatalog().strings {
             guard let value = portuguese(entry) else { continue }

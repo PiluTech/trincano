@@ -58,6 +58,43 @@ struct IconAssetsTests {
         }
     }
 
+    /// `hasAlpha` only says the PNG has an alpha channel; a glyph rendered on a white backdrop still has one.
+    /// A template glyph must be transparent around the art, or it shows up as a white square.
+    private func cornerAlphas(of url: URL) -> (corners: [UInt8], maxAlpha: UInt8)? {
+        guard
+            let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+            let image = CGImageSourceCreateImageAtIndex(source, 0, nil)
+        else {
+            return nil
+        }
+        let width = image.width
+        let height = image.height
+        var pixels = [UInt8](repeating: 0, count: width * height * 4)
+        guard let context = CGContext(
+            data: &pixels, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+            space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else {
+            return nil
+        }
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        func alpha(_ x: Int, _ y: Int) -> UInt8 { pixels[(y * width + x) * 4 + 3] }
+        let corners = [alpha(0, 0), alpha(width - 1, 0), alpha(0, height - 1), alpha(width - 1, height - 1)]
+        let maxAlpha = stride(from: 3, to: pixels.count, by: 4).map { pixels[$0] }.max() ?? 0
+        return (corners, maxAlpha)
+    }
+
+    @Test func menuBarGlyphsAreTransparentOutsideTheArtAtEveryScale() throws {
+        for name in ["FrostBarFill", "FrostBarStroke"] {
+            let dir = catalog.appendingPathComponent("ControlItemImages/FrostBar/\(name).imageset")
+            for suffix in ["", "@2x", "@3x"] {
+                let url = dir.appendingPathComponent("\(name)\(suffix).png")
+                let alphas = try #require(cornerAlphas(of: url), "\(name)\(suffix) unreadable")
+                #expect(alphas.corners.allSatisfy { $0 == 0 }, "\(name)\(suffix) is opaque in the corners (white square): \(alphas.corners)")
+                #expect(alphas.maxAlpha > 200, "\(name)\(suffix) has no art (blank glyph)")
+            }
+        }
+    }
+
     // MARK: Provenance: the referenced PNGs must be the Frost Bar art, not the Ice cube.
 
     private var appIconDir: URL {
