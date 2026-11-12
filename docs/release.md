@@ -2,7 +2,7 @@
 
 O repositório é público, então os runners padrão (`macos-26`, `ubuntu-latest`) são gratuitos. Dois workflows em `.github/workflows/`:
 
-- `ci.yml` (**CI**): em PR e em push na `main`. SwiftLint `--strict`, testes do Xcode (`TrincanoTests`), build Release sem assinatura, catálogo PT-BR, `check-icon-bundle` e `test-appcast`. `concurrency` cancela o run anterior do mesmo PR, `timeout-minutes: 45`, `paths-ignore` para `docs/**`, `**/*.md`, `LICENSE` e os templates de issue. Também é chamado pelo `release.yml` (`workflow_call`), onde o `paths-ignore` não vale.
+- `ci.yml` (**CI**): em PR e em push na `main`. SwiftLint `--strict` na versão **fixada** (0.65.1, binário portátil conferido por sha256; atualize versão e hash juntos), testes do Xcode (`TrincanoTests`), build Release sem assinatura, catálogo PT-BR, `check-icon-bundle` e `test-appcast`. `concurrency` cancela o run anterior do mesmo PR, `timeout-minutes: 45`, `paths-ignore` para `docs/**`, `**/*.md`, `LICENSE` e os templates de issue. Também é chamado pelo `release.yml` (`workflow_call`), onde o `paths-ignore` não vale.
 - `release.yml` (**Release**): só por tag `vX.Y.Z`. Passos: `verify` (sem segredos) → `ci` → `sign` (environment `release`) → `publish` (rascunho).
 
 Todas as actions estão fixadas por SHA (comentário ao lado com a versão): `actions/checkout` v7.0.1, `actions/upload-artifact` v7.0.2, `actions/download-artifact` v8.0.2. Para atualizar, resolva a tag na API (`gh api repos/actions/<nome>/git/ref/tags/<tag>`, desreferenciando tag anotada) e troque o SHA.
@@ -10,7 +10,11 @@ Todas as actions estão fixadas por SHA (comentário ao lado com a versão): `ac
 ## O que o `release.yml` faz
 1. **verify** (`macos-26`, `contents: read`, sem segredos): o formato da tag; o commit da tag já está na `main`; `MARKETING_VERSION` do projeto igual à tag; existe `docs/notas-da-versao/<versão>.html`.
 2. **ci**: o mesmo `ci.yml`.
-3. **sign** (`environment: release`, `contents: read`): só aqui existem os segredos. Cria um **chaveiro temporário** com o Developer ID, grava as chaves do notary e do Sparkle em arquivos `600` em `$RUNNER_TEMP` e roda `scripts/release.sh` (`NOTARY_KEY_FILE`, `SPARKLE_KEY_FILE`, `DEVELOPER_ID`): build, assinatura de dentro para fora, notarização, staple, `.dmg` arrumado, `spctl` e o `appcast.xml` assinado e conferido. Confere o sha256 contra o `.source.txt`, grava `SHA256SUMS.txt` e sobe os três arquivos como artefato (14 dias). Um passo `if: always()` apaga o chaveiro e as chaves, mesmo em erro. Nenhum segredo vai a `echo`; o que não é segredo (identidade, versão) pode aparecer no log.
+3. **sign** (`environment: release`, `contents: read`): só aqui existem os segredos, e cada um fica no menor escopo possível:
+   - **Developer ID**: o `.p12` vira um **chaveiro temporário** (senha aleatória, só no shell do passo) e o arquivo é apagado logo após o import. O chaveiro entra na lista de busca para o `codesign` usar; é apagado no fim (`if: always()`).
+   - **Notarização**: o passo do `scripts/release.sh` recebe a `.p8` em `NOTARY_P8_BASE64`. O script a guarda numa variável do shell e a **remove do ambiente** antes do `xcodebuild`, então build e build phases não a veem; o arquivo temporário `600` só nasce na notarização e é apagado ao sair. `SKIP_APPCAST=1` impede o appcast neste passo.
+   - **Sparkle**: um passo seguinte e separado grava a chave EdDSA num arquivo `600`, roda `scripts/appcast.sh` com `SPARKLE_KEY_FILE` só nesse comando e a apaga na hora (de novo pelo `always()`, como rede de segurança). Nada disso vai para o `GITHUB_ENV`.
+   Depois confere o sha256 contra o `.source.txt`, grava `SHA256SUMS.txt` e sobe os três arquivos como artefato (14 dias). Nenhum segredo vai a `echo`; o que não é segredo (identidade, versão) pode aparecer no log.
 4. **publish** (`ubuntu-latest`, `contents: write`, sem segredos de assinatura): baixa o artefato, **confere o sha256** do `.dmg` com o que o job de assinatura calculou e com o `SHA256SUMS.txt`, confere que o appcast aponta para a tag e que o `length` bate com o tamanho do `.dmg`, e cria o release como **rascunho** (`gh release create --draft --verify-tag`) com `.dmg`, `appcast.xml` e `SHA256SUMS.txt`. **Publicar o rascunho é manual** (é ele que liga o feed `releases/latest/download/appcast.xml`).
 
 ## Como lançar
@@ -56,6 +60,23 @@ gh secret list --env release -R $R
 - **`macos-26`**: arm64, Xcode 26 da imagem do runner; o Xcode exato aparece no passo "Versões" do `ci.yml`. A primeira rodada do CI no PR dirá se o SwiftLint da imagem concorda com a versão local (0.65.1).
 - **Primeira execução do CI**: o `scripts/check.sh` local continua valendo (inclui o build assinado com o certificado local); o CI roda a mesma validação sem assinatura.
 - **Checks obrigatórios**: com `paths-ignore`, um PR só de docs não dispara o `CI`; se a branch protection exigir o check `Lint, testes e build Release`, esses PRs ficam pendentes. Não exija o check, ou troque o `paths-ignore` por um job que decide dentro do workflow.
+
+## Quem pode mexer no caminho de release
+- **CODEOWNERS** (`.github/CODEOWNERS`): `.github/workflows/`, `release.sh`, `appcast.sh` e este doc pertencem a `@PiluVitu`. O arquivo só vira exigência se a proteção da `main` tiver "Require review from Code Owners" (ruleset ou branch protection): ligue quando o Paulo quiser.
+- **Ruleset que restringe criar tags `v*` (proposta, NÃO criado):** só quem tem bypass cria, atualiza ou apaga essas tags. A API de rulesets aceita como bypass papéis, times e integrações (não um usuário avulso); com o Paulo como único administrador do repo, o papel `admin` equivale a "só o Paulo".
+```sh
+gh api -X POST repos/PiluTech/trincano/rulesets --input - <<'JSON'
+{
+  "name": "tags de release (v*)",
+  "target": "tag",
+  "enforcement": "active",
+  "conditions": { "ref_name": { "include": ["refs/tags/v*"], "exclude": [] } },
+  "rules": [{ "type": "creation" }, { "type": "update" }, { "type": "deletion" }],
+  "bypass_actors": [{ "actor_id": 5, "actor_type": "RepositoryRole", "bypass_mode": "always" }]
+}
+JSON
+```
+Confira o resultado em Settings → Rules. Sem esse ruleset, quem tem acesso de escrita ao repo pode empurrar uma tag `v*` e iniciar o workflow; mesmo assim o job `sign` só roda depois do revisor do environment aprovar.
 
 ## Proposta (não criada): bump do cask no `PiluTech/homebrew-tap`
 Depois do release publicado, um job extra poderia abrir um PR no tap com a versão e o sha256 novos. Precisa de um **token fine-grained** limitado ao repo `PiluTech/homebrew-tap` (`Contents: write` e `Pull requests: write`), guardado como `HOMEBREW_TAP_TOKEN` no environment `release` (ou num environment próprio). Esboço: `on: release: types: [published]`, baixar o `.dmg` do release, calcular o sha256, editar `Casks/trincano.rb` (`version` e `sha256`, mantendo `auto_updates true`) e abrir o PR com `gh pr create`. Fica de fora até o Paulo decidir criar o token.

@@ -1,0 +1,7 @@
+# Quem revisa o que muda o caminho de assinatura e release.
+# Só vale como exigência com "Require review from Code Owners" na proteção da main (docs/release.md).
+/.github/workflows/ @PiluVitu
+/.github/CODEOWNERS @PiluVitu
+/scripts/release.sh @PiluVitu
+/scripts/appcast.sh @PiluVitu
+/docs/release.md @PiluVitu
