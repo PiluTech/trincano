@@ -12,39 +12,24 @@
 
 </div>
 
-Trincano hides and shows the items in your menu bar. When there is no room left (for example, when items end up behind the notch), it shows them in the **Trincano Bar**, a bar that appears right below the menu bar.
+Trincano keeps your menu bar tidy. It hides the items you rarely need and shows them again with a hover, a click or a scroll. When there is no room left (for example, when items end up behind the notch), it shows them in the **Trincano Bar**, a bar that appears right below the menu bar.
 
 ![Menu bar layout editor with the Trincano Bar](docs/prints/01-barra-organizada.png)
 
-> [!IMPORTANT]
-> **Trincano is a modified version of [Ice](https://github.com/jordanbaird/Ice), by Jordan Baird.** It is free software released under the [GNU General Public License v3.0](LICENSE), like Ice. It is based on Ice's `macos-26` branch. Modified by Paulo Victor T Silva (PILUTECH), 2026. Many thanks to Jordan Baird and to everyone who contributed to Ice. This project is not affiliated with or endorsed by the Ice project.
-
 ## Features
 
-### What Trincano adds to Ice
-
-- **Notch aware.** On a Mac with a notch, items that would end up hidden behind it appear in the Trincano Bar instead. The bar opens automatically when the hidden items do not fit to the right of the notch, and you can click the notch to open it. Both options are on by default and can be turned off in Settings > General.
-- **Better on macOS 26 (Tahoe).** Fixes and fallbacks for the issues Ice has on Tahoe, including a ScreenCaptureKit fallback.
-- **Multiple displays.** Each display can use the Trincano Bar or expand the menu bar inline. The choice is remembered per display, so it comes back by itself when you reconnect a monitor. Opening, hiding and timed rehide follow the display that has the active menu bar. The per-display setting appears in Settings > General when two or more displays are connected.
+- **Hide and show menu bar items**, with a hidden section and an "always hidden" section. Show them by hovering over the menu bar, clicking an empty area, or scrolling or swiping in it; rehide them automatically.
+- **Made for Macs with a notch.** Items that would end up behind the notch appear in the Trincano Bar instead. The bar opens by itself when the hidden items do not fit to the right of the notch, and you can click the notch to open it. Both options are on by default and can be turned off in Settings > General.
+- **Works on macOS 26 (Tahoe)**, including a ScreenCaptureKit fallback.
+- **Multiple displays.** Each display can use the Trincano Bar or expand the menu bar inline. The choice is remembered per display and comes back by itself when you reconnect a monitor.
+- **Arrange by dragging.** A drag-and-drop layout editor, plus search for menu bar items.
+- **Menu bar appearance:** tint (solid and gradient), shadow, border and custom shapes (rounded and/or split); menu bar item spacing (beta).
+- **Hotkeys** to toggle menu bar sections, show the search panel, enable or disable the Trincano Bar, show or hide the section divider icons and toggle application menus. Launch at login.
 - **Fast and light.** On the author's MacBook Air M4 (macOS 26.6.2) the app sat at about 0% CPU and 56 MB of memory when idle, and the Trincano Bar took a median of 34 ms to show. See [docs/estado-atual.md](docs/estado-atual.md) for the numbers.
 - **English and Brazilian Portuguese.** The interface follows the system language.
 - **Accessibility.** Animations take 150 to 300 ms and turn off with "Reduce motion". Menu bar controls, the Trincano Bar and the search have VoiceOver labels. VoiceOver actions to move items in the layout editor are not available yet.
-- **Easy updates, only with your consent.** A standard window shows the release notes (in Portuguese) with Install, Remind Me Later and Skip This Version. Automatic daily checks stay off until you agree (it asks on the second launch); there is also "Check for Updates…" in the menu. Updates are signed with EdDSA. No telemetry.
-- **Drag-and-drop install.** The `.dmg` has a ready window, and if Trincano opens outside the Applications folder it offers to move itself there.
-- **Swift 6** with strict concurrency checking and no warnings.
-
-### Inherited from Ice
-
-- Hide menu bar items, with an "always hidden" section
-- Show hidden items by hovering over the menu bar, clicking an empty area, or scrolling or swiping in the menu bar
-- Automatically rehide items
-- Hide application menus when they overlap with the items being shown
-- Drag-and-drop interface to arrange items
-- Search menu bar items
-- Menu bar item spacing (beta)
-- Menu bar appearance: tint (solid and gradient), shadow, border and custom shapes (rounded and/or split)
-- Hotkeys to toggle menu bar sections, show the search panel, enable or disable the Trincano Bar, show or hide the section divider icons and toggle application menus
-- Launch at login
+- **Updates only with your consent.** A standard window shows the release notes (in Portuguese) with Install, Remind Me Later and Skip This Version. Automatic daily checks stay off until you agree (it asks on the second launch); there is also "Check for Updates…" in the menu. Updates are signed with EdDSA.
+- **Easy install.** The `.dmg` has a ready window, and if Trincano opens outside the Applications folder it offers to move itself there.
 
 ## Screenshots
 
@@ -73,9 +58,9 @@ The cask comes from the [PiluTech/homebrew-tap](https://github.com/PiluTech/home
 
 ### Download
 
-Download `Trincano-<version>.dmg` from the [latest release](https://github.com/PiluTech/trincano/releases/latest), open it and drag **Trincano** to the Applications folder. Each release is signed with a Developer ID and notarized by Apple, and names the tag and the commit of its source code (GPL).
+Get `Trincano-<version>.dmg` from the [Trincano page](https://pilutech.com.br/apps/trincano) or from the [latest release](https://github.com/PiluTech/trincano/releases/latest) on GitHub, open it and drag **Trincano** to the Applications folder. Each release is signed with a Developer ID and notarized by Apple, and names the tag and the commit of its source code.
 
-Do not run Trincano and Ice at the same time: both manage the same menu bar.
+If you also have Ice installed, do not run both at the same time: both manage the same menu bar.
 
 ## Requirements and permissions
 
@@ -123,7 +108,7 @@ Everything stays on your Mac. Trincano has no telemetry and no analytics. It onl
 
 ## Documentation
 
-See [docs/](docs/) (in Portuguese), starting with [docs/estado-atual.md](docs/estado-atual.md). [FREQUENT_ISSUES.md](FREQUENT_ISSUES.md) is inherited from Ice and mentions Ice by name.
+See [docs/](docs/) (in Portuguese), starting with [docs/estado-atual.md](docs/estado-atual.md). [FREQUENT_ISSUES.md](FREQUENT_ISSUES.md) comes from the original Ice project and mentions Ice by name.
 
 ## Contributing
 
@@ -131,6 +116,6 @@ Issues are welcome. Pull requests go against `main` of this repository, never ag
 
 ## License and credits
 
-Trincano is available under the [GPL-3.0 license](LICENSE), the same license as Ice. It is a modified version of [Ice](https://github.com/jordanbaird/Ice) by Jordan Baird, based on Ice's `macos-26` branch; the original copyright notices and headers are kept. Thanks to Jordan Baird and to everyone who contributed to Ice.
+Trincano is free software under the [GPL-3.0 license](LICENSE), and its source code is public. Modified by Paulo Victor T Silva (PILUTECH), 2026.
 
-Trincano is not affiliated with or endorsed by the Ice project.
+Trincano began as a fork of [Ice](https://github.com/jordanbaird/Ice), the menu bar manager by Jordan Baird, also under the GPL-3.0, starting from Ice's `macos-26` branch. The original copyright notices and headers are kept. Many thanks to Jordan Baird and to everyone who contributed to Ice. Trincano is not affiliated with or endorsed by the Ice project.
