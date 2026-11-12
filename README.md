@@ -119,7 +119,7 @@ Decision logic (notch geometry, Trincano Bar policies, rehide, display resolvers
 
 ## Privacy
 
-Everything stays on your Mac. Trincano has no telemetry and no analytics. It only reaches the internet to look for updates (one HTTPS request a day to `github.com/PiluTech/trincano`), and **only after you allow it**; until then the app makes no network requests. Details in [docs/atualizacao.md](docs/atualizacao.md). The Accessibility and Screen Recording permissions are used only to read the position and image of menu bar items.
+Everything stays on your Mac. Trincano has no telemetry and no analytics. It only reaches the internet to look for updates (one HTTPS request a day to `github.com/PiluTech/trincano`), and **only after you allow it**; until then the app makes no network requests. If you click Install on an update, it downloads the new `.dmg` from the same GitHub project. Details in [docs/atualizacao.md](docs/atualizacao.md). The Accessibility and Screen Recording permissions are used only to read the position and image of menu bar items.
 
 ## Documentation
 

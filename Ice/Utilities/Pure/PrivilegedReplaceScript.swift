@@ -11,6 +11,10 @@
 /// earlier in the app stale; these ones cannot be. A small window between
 /// the last check and `rm` remains, but it is a few shell commands wide.
 ///
+/// The new copy is first built in a hidden sibling folder (same volume), and
+/// only after the checks does `rm` + `mv` (a rename) swap it in, so a failed
+/// `ditto` never leaves the destination without the app.
+///
 /// Exit codes of the checks are those of `ReplacementTargetPlan.Verdict`.
 enum PrivilegedReplaceScript {
     static func build(source: String, destination: String, expectedBundleIdentifier: String) -> String {
@@ -18,11 +22,16 @@ enum PrivilegedReplaceScript {
         let symlink = ReplacementTargetPlan.Verdict.refusedSymlink.scriptExitCode ?? 1
         let otherApp = ReplacementTargetPlan.Verdict.refusedOtherApp.scriptExitCode ?? 1
         let partial = ReplacementTargetPlan.Verdict.refusedIncompleteBundle.scriptExitCode ?? 1
+        let prepareFailed = 20
+        let copyFailed = 21
         // `[ -L ]` comes first: it does not follow the link, and a dangling
         // link would otherwise look like "nothing there".
         return """
         src=\(quoted(source))
         dest=\(quoted(destination))
+        tmp=$(/usr/bin/mktemp -d "$(/usr/bin/dirname "$dest")/.trincano-new.XXXXXX") || exit \(prepareFailed)
+        trap '/bin/rm -rf "$tmp"' EXIT
+        /usr/bin/ditto "$src" "$tmp/app" || exit \(copyFailed)
         if [ -L "$dest" ]; then exit \(symlink); fi
         if [ -e "$dest" ]; then
             plist="$dest/Contents/Info.plist"
@@ -33,7 +42,7 @@ enum PrivilegedReplaceScript {
             [ -f "$dest/Contents/MacOS/$exe" ] || exit \(partial)
             [ "$id" = \(quoted(expectedBundleIdentifier)) ] || exit \(otherApp)
         fi
-        /bin/rm -rf "$dest" && /usr/bin/ditto "$src" "$dest"
+        /bin/rm -rf "$dest" && /bin/mv "$tmp/app" "$dest"
         """
     }
 
