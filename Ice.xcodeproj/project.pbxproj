@@ -95,6 +95,7 @@
 		ED5BCFDA1A9990FACC643A6E /* RehideTimerPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B86F517483749E8007E1457 /* RehideTimerPlan.swift */; };
 		F280C9F768D058D8A9CFC5F1 /* ActiveMenuBarDisplayResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D645C128227D400BC666F852 /* ActiveMenuBarDisplayResolver.swift */; };
 		F3FF1040FAA5DB14A72B8346 /* XPCPeerPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 674368231213A806CC1DD114 /* XPCPeerPolicy.swift */; };
+		F454C32B007E838511875CC9 /* PrivilegedReplaceScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639138E63FD2659E8196FA41 /* PrivilegedReplaceScript.swift */; };
 		F4BBB9729383966CDFEC5C1F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A63D371CB51EAD85ED64E81 /* Cocoa.framework */; };
 		F84B42A663E81C5791CB3470 /* MoveToApplicationsPlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 819ADA29D5192B5A226789EE /* MoveToApplicationsPlanTests.swift */; };
 		F9E0A9128D8854866F68CECC /* DurationTextTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3187ECE7119C8589F175DC2 /* DurationTextTests.swift */; };
@@ -178,6 +179,7 @@
 		5C60AA5056A90F3A1BEC23E8 /* TrincanoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TrincanoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5ECB8CAFDFCADB537F318BA3 /* TrincanoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TrincanoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		60C509B7E64E82543B9F9044 /* ControlItemImage.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ControlItemImage.swift; path = Ice/MenuBar/ControlItem/ControlItemImage.swift; sourceTree = "<group>"; };
+		639138E63FD2659E8196FA41 /* PrivilegedReplaceScript.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PrivilegedReplaceScript.swift; path = Ice/Utilities/Pure/PrivilegedReplaceScript.swift; sourceTree = "<group>"; };
 		65E7A6B207F4D6E22C2E6908 /* DisplayTopology.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DisplayTopology.swift; path = Ice/Utilities/Pure/DisplayTopology.swift; sourceTree = "<group>"; };
 		666CFA21AF6DA01251251C44 /* MoveToApplicationsPlan.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MoveToApplicationsPlan.swift; path = Ice/Utilities/Pure/MoveToApplicationsPlan.swift; sourceTree = "<group>"; };
 		674368231213A806CC1DD114 /* XPCPeerPolicy.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = XPCPeerPolicy.swift; path = Shared/Utilities/XPCPeerPolicy.swift; sourceTree = "<group>"; };
@@ -465,6 +467,7 @@
 				3FBE76B4BF34CDE8B82169E6 /* SerialAsyncQueue.swift */,
 				E52220CB46F79EEA09AF3CAC /* SectionSession.swift */,
 				72E457A1146F4FE034F9DC9A /* ReplacementTargetPlan.swift */,
+				639138E63FD2659E8196FA41 /* PrivilegedReplaceScript.swift */,
 			);
 			name = TestedSources;
 			path = .;
@@ -816,6 +819,7 @@
 				971C367E696041EEA2C7EF33 /* SectionSession.swift in Sources */,
 				E1EE61E3D220C6F8EEAA8FDE /* ReplacementTargetPlan.swift in Sources */,
 				6487272CBAF98F150D0D7DC5 /* ReplacementTargetPlanTests.swift in Sources */,
+				F454C32B007E838511875CC9 /* PrivilegedReplaceScript.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
