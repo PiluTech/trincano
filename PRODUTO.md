@@ -4,7 +4,7 @@ O Trincano está em desenvolvimento e ainda não tem versão pronta para instala
 
 - Esconde e mostra os itens da barra de menus, com foco em Macs com notch e no macOS 26.
 - A Barra do Trincano, com os itens escondidos numa barra abaixo da barra de menus.
-- Sem telemetria e sem acesso à rede.
+- Sem telemetria. O Trincano só acessa a internet para procurar atualizações, e só depois que você permite.
 
 ## Créditos
 

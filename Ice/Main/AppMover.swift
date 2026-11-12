@@ -48,7 +48,7 @@ enum AppMover {
         do {
             try copy(from: bundleURL, to: destination)
         } catch {
-            logger.error("Could not move to Applications: \(error.localizedDescription)")
+            logger.error("Could not move to Applications: \(String(describing: error))")
             let failure = NSAlert()
             failure.messageText = String(localized: "Could not move Trincano")
             failure.informativeText = String(
@@ -64,26 +64,34 @@ enum AppMover {
 
     private enum CopyError: Error {
         case failed
-        case destinationIsAnotherApp
-        case destinationIsSymlink
+        case refused(ReplacementTargetPlan.Verdict)
     }
 
-    /// Reads the destination without following links and applies
-    /// `ReplacementTargetPlan`. Called before every destructive step.
+    /// Early check for the unprivileged path (a clear refusal before touching
+    /// anything). It does NOT protect the administrator step: the password
+    /// prompt comes later, so that step repeats the same rules inside its own
+    /// script (`PrivilegedReplaceScript`), right before `rm`/`ditto`.
     private static func verifyDestination(_ destination: URL) throws {
         var info = stat()
         let exists = lstat(destination.path, &info) == 0
         let isSymbolicLink = exists && (info.st_mode & S_IFMT) == S_IFLNK
+        var isBundleComplete = false
+        var bundleIdentifier: String?
+        if exists, !isSymbolicLink, let bundle = Bundle(url: destination) {
+            bundleIdentifier = bundle.bundleIdentifier
+            isBundleComplete = bundle.executableURL.map {
+                FileManager.default.fileExists(atPath: $0.path)
+            } ?? false
+        }
         let verdict = ReplacementTargetPlan.evaluate(
             exists: exists,
             isSymbolicLink: isSymbolicLink,
-            bundleIdentifier: exists && !isSymbolicLink ? Bundle(url: destination)?.bundleIdentifier : nil,
+            isBundleComplete: isBundleComplete,
+            bundleIdentifier: bundleIdentifier,
             expectedBundleIdentifier: Bundle.main.bundleIdentifier
         )
-        switch verdict {
-        case .safe: break
-        case .refusedSymlink: throw CopyError.destinationIsSymlink
-        case .refusedOtherApp: throw CopyError.destinationIsAnotherApp
+        if verdict != .safe {
+            throw CopyError.refused(verdict)
         }
     }
 
@@ -91,7 +99,7 @@ enum AppMover {
     /// when the plain copy is not permitted.
     private static func copy(from source: URL, to destination: URL) throws {
         let fileManager = FileManager.default
-        // Only replace an existing copy of this same app (same bundle
+        // Only replace a complete copy of this same app (same bundle
         // identifier), and never through a symbolic link.
         try verifyDestination(destination)
         do {
@@ -100,9 +108,6 @@ enum AppMover {
             }
             try fileManager.copyItem(at: source, to: destination)
         } catch {
-            // The password prompt can take a while and the first attempt may
-            // have failed halfway: check again right before the `rm -rf`.
-            try verifyDestination(destination)
             try copyWithAdministratorPrivileges(from: source, to: destination)
         }
         // The copy was already approved by Gatekeeper (it is the running app),
@@ -111,17 +116,32 @@ enum AppMover {
     }
 
     private static func copyWithAdministratorPrivileges(from source: URL, to destination: URL) throws {
-        func quoted(_ path: String) -> String {
-            "'" + path.replacingOccurrences(of: "'", with: "'\\''") + "'"
+        guard let bundleIdentifier = Bundle.main.bundleIdentifier else {
+            throw CopyError.failed
         }
-        let shell = "/bin/rm -rf \(quoted(destination.path)) && /usr/bin/ditto \(quoted(source.path)) \(quoted(destination.path))"
+        // The checks are part of the script itself, so they run as
+        // administrator right before the `rm`/`ditto`, after the password.
+        let shell = PrivilegedReplaceScript.build(
+            source: source.path,
+            destination: destination.path,
+            expectedBundleIdentifier: bundleIdentifier
+        )
         let escaped = shell
             .replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "\"", with: "\\\"")
+            .replacingOccurrences(of: "\n", with: "\\n")
         var errorInfo: NSDictionary?
         let script = NSAppleScript(source: "do shell script \"\(escaped)\" with administrator privileges")
         script?.executeAndReturnError(&errorInfo)
-        if errorInfo != nil || !FileManager.default.fileExists(atPath: destination.path) {
+        if let errorInfo {
+            // For `do shell script`, the error number is the script's exit status.
+            let number = (errorInfo[NSAppleScript.errorNumber] as? Int).flatMap(Int32.init(exactly:))
+            if let number, let verdict = ReplacementTargetPlan.Verdict(scriptExitCode: number) {
+                throw CopyError.refused(verdict)
+            }
+            throw CopyError.failed
+        }
+        if !FileManager.default.fileExists(atPath: destination.path) {
             throw CopyError.failed
         }
     }
