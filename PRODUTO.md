@@ -1,6 +1,6 @@
 ## O que está sendo feito
 
-O Trincano está em desenvolvimento e ainda não tem versão pronta para instalar. O código é público no GitHub.
+Baixe o .dmg mais recente em github.com/PiluTech/trincano/releases ou instale pelo Homebrew (brew trust pilutech/tap e brew install --cask pilutech/tap/trincano). O código é público no GitHub.
 
 - Esconde e mostra os itens da barra de menus, com foco em Macs com notch e no macOS 26.
 - A Barra do Trincano, com os itens escondidos numa barra abaixo da barra de menus.
