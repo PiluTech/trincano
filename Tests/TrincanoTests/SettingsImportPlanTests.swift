@@ -3,6 +3,7 @@
 //  TrincanoTests
 //
 
+import Foundation
 import Testing
 
 struct SettingsImportPlanTests {
@@ -39,6 +40,16 @@ struct SettingsImportPlanTests {
 
     @Test func doesNotCopySparkleOrSystemKeys() {
         let source: [String: Any] = ["SUEnableAutomaticChecks": true, "NSWindow Frame Foo": "x"]
+        #expect(SettingsImportPlan.valuesToImport(source: source, allowedKeys: allowed, existingKeys: []).isEmpty)
+    }
+
+    @Test func neverImportsTheUpdateConsentFromIce() {
+        // Copying these would turn automatic checks on without asking.
+        let source: [String: Any] = [
+            "SUEnableAutomaticChecks": true, "SUHasLaunchedBefore": true,
+            "SUAutomaticallyUpdate": true, "SULastCheckTime": Date()
+        ]
+        let allowed: Set<String> = ["UseIceBar"]
         #expect(SettingsImportPlan.valuesToImport(source: source, allowedKeys: allowed, existingKeys: []).isEmpty)
     }
 }

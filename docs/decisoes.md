@@ -9,6 +9,11 @@
 - **SwiftLint 0.65.1** (Homebrew). Corrigido o que a versão nova apontou (`scaledToFit()`); `swiftlint lint --strict` limpo.
 - **Fora da fase 1** (ficam para as próximas): localização com String Catalog (PT-BR/en), ícone, perfis por tela (monitor externo fica em cima do notebook), Swift 6, Acknowledgements ainda cita o Sparkle (atualizar o PDF/RTF).
 
+## 0.13.0: atualização pelo Sparkle (2026-11-11)
+- A decisão "sem atualização e sem rede" da fase 1 **muda**: o Sparkle 2.10.1 volta, com feed (`github.com/PiluTech/trincano/releases/latest/download/appcast.xml`) e chave EdDSA próprios, e **só consulta a rede com consentimento** (o Sparkle pergunta na 2ª abertura; nunca ligar sem perguntar). O padrão segue sem rede até a pessoa aceitar.
+- Dependência nova: Sparkle 2.10.1, licença MIT, versão exata. Chave privada só no 1Password. Detalhes e passo a passo em `atualizacao.md`.
+- Instalação no padrão dos apps de Mac: .dmg arrumado e "Mover para Aplicativos" (implementação própria, sem dependência).
+
 ## Fase 7: Swift 6 (2026-11-07)
 
 - Os alvos Ice, MenuBarItemService e TrincanoTests usam `SWIFT_VERSION = 6.0` (também em `scripts/add-test-target.rb`); com `SWIFT_STRICT_CONCURRENCY=complete` não há avisos de concorrência.

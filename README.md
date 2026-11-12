@@ -29,7 +29,8 @@ Trincano hides and shows the items in your menu bar. When there is no room left 
 - **Fast and light.** On the author's MacBook Air M4 (macOS 26.6.2) the app sat at about 0% CPU and 56 MB of memory when idle, and the Trincano Bar took a median of 34 ms to show. See [docs/estado-atual.md](docs/estado-atual.md) for the numbers.
 - **English and Brazilian Portuguese.** The interface follows the system language.
 - **Accessibility.** Animations take 150 to 300 ms and turn off with "Reduce motion". Menu bar controls, the Trincano Bar and the search have VoiceOver labels. VoiceOver actions to move items in the layout editor are not available yet.
-- **No telemetry and no network access.** Ice's update system was removed.
+- **Easy updates, only with your consent.** A standard window shows the release notes (in Portuguese) with Install, Remind Me Later and Skip This Version. Automatic daily checks stay off until you agree (it asks on the second launch); there is also "Check for Updates…" in the menu. Updates are signed with EdDSA. No telemetry.
+- **Drag-and-drop install.** The `.dmg` has a ready window, and if Trincano opens outside the Applications folder it offers to move itself there.
 - **Swift 6** with strict concurrency checking and no warnings.
 
 ### Inherited from Ice
@@ -118,7 +119,7 @@ Decision logic (notch geometry, Trincano Bar policies, rehide, display resolvers
 
 ## Privacy
 
-Everything stays on your Mac. Trincano has no telemetry, no analytics and **no network access**: it does not check for updates. The Accessibility and Screen Recording permissions are used only to read the position and image of menu bar items.
+Everything stays on your Mac. Trincano has no telemetry and no analytics. It only reaches the internet to look for updates (one HTTPS request a day to `github.com/PiluTech/trincano`), and **only after you allow it**; until then the app makes no network requests. Details in [docs/atualizacao.md](docs/atualizacao.md). The Accessibility and Screen Recording permissions are used only to read the position and image of menu bar items.
 
 ## Documentation
 

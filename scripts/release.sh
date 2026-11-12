@@ -12,7 +12,13 @@
 #   NOTARY_OP_REF      referência op:// do .p8 no 1Password (lido na hora; o arquivo temporário
 #                      fica com chmod 600 e é apagado ao sair, mesmo em erro)
 #   NOTARY_KEY_FILE    alternativa ao 1Password: caminho de um .p8 já existente (não é apagado)
-# Saída: build/release/Trincano-<versão>.dmg
+#   SPARKLE_OP_REF     op://... da chave EdDSA do Sparkle (item "Trincano: chave Sparkle (EdDSA)", cofre
+#                      Personal; use o ID do item na referência). Lida para arquivo temporário 600, apagado ao sair
+#   SPARKLE_KEY_FILE   alternativa: caminho de um arquivo com a chave (não é apagado)
+#   SPARKLE_BIN        pasta das ferramentas do Sparkle (padrão: a do SPM em build/SourcePackages)
+# Notas da versão (pt-BR, HTML curto, sem script): docs/notas-da-versao/<versão>.html (obrigatório)
+# Saída: build/release/Trincano-<versão>.dmg e build/release/appcast.xml (só com notarização;
+#        o upload na release do GitHub é manual)
 set -euo pipefail
 cd "${0:A:h}/.."
 
@@ -46,6 +52,14 @@ fi
 
 # --- Assinatura de dentro para fora (sem --deep), runtime reforçado, sem entitlements ---
 sign() { codesign --force --timestamp --options runtime --sign "$DEVELOPER_ID" "$@"; }
+# Sparkle aninhado, na ordem da documentação dele (do mais interno para o framework).
+SPK="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
+[[ -d "$SPK" ]] || die "Sparkle.framework não está dentro do app ($SPK)"
+for part in XPCServices/Installer.xpc XPCServices/Downloader.xpc Autoupdate Updater.app; do
+  [[ -e "$SPK/$part" ]] || continue
+  if [[ "$part" == *Downloader.xpc ]]; then sign --preserve-metadata=entitlements "$SPK/$part"; else sign "$SPK/$part"; fi
+done
+sign "$APP/Contents/Frameworks/Sparkle.framework"
 for xpc in "$APP/$XPC_REL"/*.xpc(N); do sign "$xpc"; done
 sign "$APP"
 codesign --verify --deep --strict --verbose=2 "$APP"
@@ -59,6 +73,8 @@ codesign -d -r- "$APP" 2>&1 | grep designated
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$APP/Contents/Info.plist")"
 [[ "$VERSION" == *-dev* ]] && die "versão de release não pode ter -dev (atual: $VERSION); ajuste MARKETING_VERSION"
 [[ "$VERSION" =~ '^[0-9]+\.[0-9]+\.[0-9]+$' ]] || die "versão fora do formato X.Y.Z: $VERSION"
+[[ -n "${SKIP_NOTARIZE:-}" || -f "docs/notas-da-versao/$VERSION.html" ]] \
+  || die "faltam as notas da versão: docs/notas-da-versao/$VERSION.html"
 if [[ -n "$(git status --porcelain --untracked-files=no)" && -z "${ALLOW_DIRTY:-}" ]]; then
   die "working tree com mudanças: faça commit antes (o binário precisa corresponder a um commit)"
 fi
@@ -114,7 +130,56 @@ if [[ -z "${SKIP_NOTARIZE:-}" ]]; then
   xcrun stapler validate "$APP"
 fi
 
-# --- DMG: app + atalho Applications + LICENSE + créditos ------------------------------
+# --- DMG: app + atalho Applications + LICENSE + créditos, janela arrumada ------------------
+# Janela 660x460, ícones de 100 pt: app à esquerda, Aplicativos à direita, fundo com a seta
+# (Resources/dmg/background*.png, gerado por scripts/make-dmg-background.swift; as posições abaixo
+# precisam bater com as do gerador). AppleScript no Finder: sem ferramenta de terceiros.
+make_dmg() {  # $1 = pasta com o conteúdo, $2 = .dmg final
+  local stage="$1" final="$2" rw="$OUT/rw.dmg" mnt="/Volumes/$APP_NAME" dev
+  [[ ! -e "$mnt" ]] || die "já existe um volume montado em $mnt; ejete-o antes"
+  mkdir -p "$stage/.background"
+  tiffutil -cathidpicheck Resources/dmg/background.png Resources/dmg/background@2x.png \
+    -out "$stage/.background/background.tiff" >/dev/null
+  hdiutil create -volname "$APP_NAME" -srcfolder "$stage" -ov -format UDRW -fs HFS+ "$rw" >/dev/null
+  dev="$(hdiutil attach "$rw" -readwrite -noverify -noautoopen | awk '/Apple_HFS/{print $1; exit}')"
+  [[ -n "$dev" ]] || die "não consegui montar o .dmg de trabalho"
+  if ! osascript <<OSA
+tell application "Finder"
+  tell disk "$APP_NAME"
+    open
+    set current view of container window to icon view
+    set toolbar visible of container window to false
+    set statusbar visible of container window to false
+    set the bounds of container window to {200, 120, 860, 640}
+    set opts to the icon view options of container window
+    set arrangement of opts to not arranged
+    set icon size of opts to 100
+    set text size of opts to 12
+    set background picture of opts to file ".background:background.tiff"
+    set position of item "$APP_NAME.app" of container window to {170, 190}
+    set position of item "Applications" of container window to {490, 190}
+    set position of item "LICENSE" of container window to {170, 370}
+    set position of item "LEIA-ME.txt" of container window to {490, 370}
+    close
+    open
+    update without registering applications
+    delay 4
+    close
+  end tell
+end tell
+OSA
+  then
+    hdiutil detach "$dev" -force >/dev/null 2>&1 || true
+    die "o Finder recusou o AppleScript do layout (permita Automação > Finder para este terminal)"
+  fi
+  sync; sleep 3
+  [[ -f "$mnt/.DS_Store" ]] || { hdiutil detach "$dev" -force >/dev/null 2>&1 || true; die "layout não gravou o .DS_Store"; }
+  chmod -Rf go-w "$mnt" 2>/dev/null || true
+  for _ in 1 2 3 4 5; do hdiutil detach "$dev" >/dev/null 2>&1 && break; sleep 2; done
+  hdiutil convert "$rw" -format UDZO -imagekey zlib-level=9 -o "$final" >/dev/null
+  rm -f "$rw"
+}
+
 STAGE="$OUT/stage"
 mkdir -p "$STAGE"
 ditto "$APP" "$STAGE/$APP_NAME.app"
@@ -128,14 +193,14 @@ de Jordan Baird, licenciado sob a GNU GPL v3 (arquivo LICENSE neste disco).
 Trincano: https://github.com/PiluTech/trincano. Código-fonte aberto, mesma licença.
 
 Para instalar, arraste o Trincano para a pasta Applications.
-Sem telemetria e sem acesso à rede.
+Sem telemetria. O Trincano só acessa a internet para procurar atualizações, e só se você permitir.
 
 Versão $VERSION · código: https://github.com/PiluTech/trincano/tree/$TAG (commit $SHORT)
 
 Permissões: ao instalar o Trincano pela primeira vez (ou trocando a assinatura), conceda
 Acessibilidade e Gravação de Tela de novo em Ajustes do Sistema > Privacidade e Segurança.
 TXT
-hdiutil create -volname "$APP_NAME" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null
+make_dmg "$STAGE" "$DMG"
 rm -rf "$STAGE"
 sign "$DMG"
 
@@ -153,6 +218,12 @@ if [[ -z "${SKIP_NOTARIZE:-}" ]]; then
   hdiutil detach "$MNT" >/dev/null
 else
   echo "AVISO: SKIP_NOTARIZE ativo; este .dmg não está notarizado."
+fi
+if [[ -z "${SKIP_NOTARIZE:-}" ]]; then
+  # Appcast do Sparkle: assina o .dmg FINAL (o stapler mudou os bytes) e confere tudo.
+  scripts/appcast.sh "$DMG" "$APP" "$OUT" "$TAG"
+else
+  echo "AVISO: SKIP_NOTARIZE ativo; sem appcast (o appcast só sai de um .dmg notarizado)."
 fi
 printf 'Trincano %s\ncommit: %s\n%s\nsha256: %s\n' "$VERSION" "$COMMIT" "tag $TAG" "$(shasum -a 256 "$DMG" | cut -d' ' -f1)" > "$DMG.source.txt"
 echo "OK: $DMG"

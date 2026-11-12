@@ -566,6 +566,40 @@
         }
       }
     },
+    "Check for Updates…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check for Updates…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Procurar atualizações…"
+          }
+        }
+      }
+    },
+    "Check for updates automatically": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check for updates automatically"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Procurar atualizações automaticamente"
+          }
+        }
+      }
+    },
     "Check the spelling or search by the name of the app that owns the item.": {
       "extractionState": "manual",
       "localizations": {
@@ -804,6 +838,23 @@
         }
       }
     },
+    "Could not move Trincano": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not move Trincano"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível mover o Trincano"
+          }
+        }
+      }
+    },
     "Custom": {
       "extractionState": "manual",
       "localizations": {
@@ -974,6 +1025,23 @@
         }
       }
     },
+    "Drag Trincano to the Applications folder yourself and open it from there.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag Trincano to the Applications folder yourself and open it from there."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arraste o Trincano para a pasta Aplicativos e abra-o de lá."
+          }
+        }
+      }
+    },
     "Drag items here": {
       "extractionState": "manual",
       "localizations": {
@@ -1127,19 +1195,19 @@
         }
       }
     },
-    "Everything stays on your Mac: Trincano has no telemetry and does not check for updates.": {
+    "Everything stays on your Mac: Trincano has no telemetry. It only reaches the internet to look for updates, and only if you allow it.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Everything stays on your Mac: Trincano has no telemetry and does not check for updates."
+            "value": "Everything stays on your Mac: Trincano has no telemetry. It only reaches the internet to look for updates, and only if you allow it."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tudo fica no seu Mac: o Trincano não tem telemetria e não procura atualizações."
+            "value": "Tudo fica no seu Mac: o Trincano não tem telemetria. Ele só acessa a internet para procurar atualizações, e só se você permitir."
           }
         }
       }
@@ -1569,6 +1637,23 @@
         }
       }
     },
+    "Last checked: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last checked: %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Última verificação: %@"
+          }
+        }
+      }
+    },
     "Launch at login": {
       "extractionState": "manual",
       "localizations": {
@@ -1943,6 +2028,40 @@
         }
       }
     },
+    "Move Trincano to the Applications folder?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move Trincano to the Applications folder?"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mover o Trincano para a pasta Aplicativos?"
+          }
+        }
+      }
+    },
+    "Move to Applications": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to Applications"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mover para Aplicativos"
+          }
+        }
+      }
+    },
     "Navigate": {
       "extractionState": "manual",
       "localizations": {
@@ -2045,6 +2164,23 @@
         }
       }
     },
+    "Not Now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Now"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agora não"
+          }
+        }
+      }
+    },
     "Not affiliated with or endorsed by the Ice project.": {
       "extractionState": "manual",
       "localizations": {
@@ -2058,6 +2194,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Não afiliado nem endossado pelo projeto Ice."
+          }
+        }
+      }
+    },
+    "Not checked yet.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not checked yet."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ainda não verificado."
           }
         }
       }
@@ -3429,6 +3582,23 @@
         }
       }
     },
+    "Trincano is running from outside the Applications folder. Moving it there keeps it in place and lets updates install.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trincano is running from outside the Applications folder. Moving it there keeps it in place and lets updates install."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Trincano está rodando fora da pasta Aplicativos. Movê-lo para lá o mantém no lugar certo e permite instalar atualizações."
+          }
+        }
+      }
+    },
     "Trincano needs this to:": {
       "extractionState": "manual",
       "localizations": {
@@ -3510,6 +3680,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Setas para cima e para baixo navegam, Return clica no item, Esc fecha"
+          }
+        }
+      }
+    },
+    "Updates": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updates"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atualizações"
           }
         }
       }

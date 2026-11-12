@@ -50,6 +50,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         #endif
 
+        // Outside the Applications folder, offer to move there first (a move
+        // relaunches the app from the new place).
+        AppMover.offerIfNeeded()
+
         // Depending on the permissions state, either perform setup
         // or prompt to grant permissions.
         switch appState.permissions.permissionsState {

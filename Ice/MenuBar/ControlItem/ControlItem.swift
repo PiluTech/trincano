@@ -521,6 +521,15 @@ final class ControlItem {
         settingsItem.keyEquivalentModifierMask = .command
         menu.addItem(settingsItem)
 
+        let updatesItem = NSMenuItem(
+            title: String(localized: "Check for Updates…"),
+            action: #selector(UpdatesManager.checkForUpdates),
+            keyEquivalent: ""
+        )
+        updatesItem.target = appState.updatesManager
+        updatesItem.isEnabled = appState.updatesManager.canCheckForUpdates
+        menu.addItem(updatesItem)
+
         menu.addItem(.separator())
 
         let searchItem = NSMenuItem(
