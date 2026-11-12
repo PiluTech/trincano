@@ -52,6 +52,13 @@ struct UpdateConfigurationTests {
         #expect(plist["SUEnableSystemProfiling"] as? Bool == false)
     }
 
+    @Test func requiresASignedFeedAndVerifiesBeforeExtraction() throws {
+        // Sparkle refuses SURequireSignedFeed unless SUVerifyUpdateBeforeExtraction is also on.
+        let plist = try infoPlist()
+        #expect(plist["SURequireSignedFeed"] as? Bool == true)
+        #expect(plist["SUVerifyUpdateBeforeExtraction"] as? Bool == true)
+    }
+
     @Test func sparkleIsPinnedToAnExactVersion() throws {
         let text = try String(contentsOf: Self.root.appendingPathComponent("Ice.xcodeproj/project.pbxproj"), encoding: .utf8)
         let range = try #require(text.range(of: "sparkle-project/Sparkle\""))

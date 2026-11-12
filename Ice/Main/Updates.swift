@@ -28,7 +28,7 @@ final class UpdatesManager: NSObject, ObservableObject {
     private lazy var updaterController = SPUStandardUpdaterController(
         startingUpdater: Self.isUpdaterEnabled,
         updaterDelegate: nil,
-        userDriverDelegate: nil
+        userDriverDelegate: self
     )
 
     private static var isUpdaterEnabled: Bool {
@@ -72,5 +72,46 @@ final class UpdatesManager: NSObject, ObservableObject {
         // Activate the app so the update window comes to the front.
         appState.activate(withPolicy: .regular)
         updater.checkForUpdates()
+    }
+}
+
+// MARK: UpdatesManager: SPUStandardUserDriverDelegate
+
+/// Gentle reminders: Trincano is an accessory app (no Dock icon), so Sparkle
+/// would otherwise show a scheduled update window behind other apps. When an
+/// update is found on its own, bring the app forward so the release notes
+/// pop up where the person can see them.
+extension UpdatesManager: @preconcurrency SPUStandardUserDriverDelegate {
+    var supportsGentleScheduledUpdateReminders: Bool { true }
+
+    func standardUserDriverWillHandleShowingUpdate(
+        _ handleShowingUpdate: Bool,
+        forUpdate update: SUAppcastItem,
+        state: SPUUserUpdateState
+    ) {
+        guard handleShowingUpdate, !state.userInitiated, let appState else {
+            return
+        }
+        appState.activate(withPolicy: .regular)
+    }
+
+    func standardUserDriverWillFinishUpdateSession() {
+        // Back to an accessory app once the update window is gone, unless a
+        // window of ours (Settings) is still open.
+        let hasOpenWindow = NSApp.windows.contains { $0.isVisible && $0.canBecomeMain }
+        guard !hasOpenWindow, let appState else {
+            return
+        }
+        appState.deactivate(withPolicy: .accessory)
+    }
+}
+
+// MARK: UpdatesManager: NSMenuItemValidation
+extension UpdatesManager: NSMenuItemValidation {
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem.action == #selector(checkForUpdates) {
+            return canCheckForUpdates
+        }
+        return true
     }
 }

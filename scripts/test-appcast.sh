@@ -27,10 +27,11 @@ echo '<h2>Novidades</h2><ul><li>Teste</li></ul>' > "$T/notes.html"
 gen() {  # chave notas saída
   python3 -I scripts/make-appcast.py --dmg "$T/Trincano-9.9.9.dmg" --notes "$2" --app-info "$T/Info.plist" \
     --key-file "$1" --sign-update "$SPARKLE_BIN/sign_update" --out "$3" >/dev/null
+  "$SPARKLE_BIN/sign_update" --ed-key-file "$1" "$3" >/dev/null   # assina o feed, como o appcast.sh
 }
 check() {  # appcast build-anterior
   python3 -I scripts/check-appcast.py --appcast "$1" --dmg "$T/Trincano-9.9.9.dmg" --public-key "$PUB" \
-    --previous-build "$2" --ed25519 "$T/ed25519" >/dev/null 2>&1
+    --previous-build "$2" --ed25519 "$T/ed25519" --sign-update "$SPARKLE_BIN/sign_update" --key-file "$T/key" >/dev/null 2>&1
 }
 expect_fail() { if "$@"; then echo "FALHOU: esperava recusa: $*"; exit 1; fi; }
 
@@ -48,4 +49,14 @@ echo 'xx' > "$T/broken.xml"
 expect_fail check "$T/broken.xml" 9000
 cp "$T/Trincano-9.9.9.dmg" "$T/orig.dmg"; printf 'x' >> "$T/Trincano-9.9.9.dmg"
 expect_fail check "$T/ok.xml" 9000          # .dmg alterado depois da assinatura
-echo "test-appcast: OK (7 casos)"
+# Feed editado depois de assinado (mesmo com o .dmg e a assinatura do binário intactos).
+cp "$T/orig.dmg" "$T/Trincano-9.9.9.dmg"
+gen "$T/key" "$T/notes.html" "$T/edited.xml"
+check "$T/edited.xml" 9000 || { echo "FALHOU: feed válido recusado"; exit 1; }
+sed -i '' 's/Versão 9.9.9/Versão 9.9.8/' "$T/edited.xml"
+expect_fail check "$T/edited.xml" 9000
+# Feed sem assinatura embutida.
+python3 -I scripts/make-appcast.py --dmg "$T/Trincano-9.9.9.dmg" --notes "$T/notes.html" --app-info "$T/Info.plist" \
+  --key-file "$T/key" --sign-update "$SPARKLE_BIN/sign_update" --out "$T/unsigned.xml" >/dev/null
+expect_fail check "$T/unsigned.xml" 9000
+echo "test-appcast: OK (10 casos)"

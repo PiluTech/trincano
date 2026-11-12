@@ -31,14 +31,20 @@ fi
 python3 -I scripts/make-appcast.py --dmg "$DMG" --notes "$NOTES" --app-info "$APP/Contents/Info.plist" \
   --key-file "$spk_key" --sign-update "$SPARKLE_BIN/sign_update" --out "$OUT/appcast.xml"
 
+# Assina o próprio feed (a assinatura vai embutida no XML; qualquer edição depois invalida) e confere.
+"$SPARKLE_BIN/sign_update" --ed-key-file "$spk_key" "$OUT/appcast.xml" >/dev/null
+"$SPARKLE_BIN/sign_update" --verify --ed-key-file "$spk_key" "$OUT/appcast.xml" >/dev/null \
+  || die "a assinatura do feed não confere"
+
 PUBKEY="$(/usr/libexec/PlistBuddy -c 'Print SUPublicEDKey' "$APP/Contents/Info.plist")"
 BUILD_NUM="$(/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' "$APP/Contents/Info.plist")"
 PREV_TAG="$(git tag --list 'v[0-9]*' --sort=-v:refname | grep -vx "$TAG" | head -n 1 || true)"
 PREV_BUILD=0
-[[ -n "$PREV_TAG" ]] && PREV_BUILD="$(git show "$PREV_TAG:Ice.xcodeproj/project.pbxproj" | grep -m1 CURRENT_PROJECT_VERSION | tr -dc '0-9')"
+[[ -n "$PREV_TAG" ]] && PREV_BUILD="$(git show "$PREV_TAG:Ice.xcodeproj/project.pbxproj" | grep CURRENT_PROJECT_VERSION | tr -dc '0-9\n' | sort -n | tail -n 1)"
 echo "build anterior ($PREV_TAG): $PREV_BUILD; novo: $BUILD_NUM"
 swiftc -o "$OUT/ed25519" scripts/ed25519.swift
 trap_rm() { rm -f "$OUT/ed25519"; }
 python3 -I scripts/check-appcast.py --appcast "$OUT/appcast.xml" --dmg "$DMG" --public-key "$PUBKEY" \
-  --previous-build "$PREV_BUILD" --ed25519 "$OUT/ed25519" || { trap_rm; exit 1; }
+  --previous-build "$PREV_BUILD" --ed25519 "$OUT/ed25519" \
+  --sign-update "$SPARKLE_BIN/sign_update" --key-file "$spk_key" || { trap_rm; exit 1; }
 trap_rm

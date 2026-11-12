@@ -27,6 +27,8 @@ def main():
     ap.add_argument("--previous-build", type=int, required=True)
     ap.add_argument("--repo", default="PiluTech/trincano")
     ap.add_argument("--ed25519", required=True, help="binário compilado de scripts/ed25519.swift")
+    ap.add_argument("--sign-update", required=True, help="sign_update do Sparkle (verifica a assinatura do feed)")
+    ap.add_argument("--key-file", required=True, help="chave privada (só para o sign_update derivar a pública)")
     a = ap.parse_args()
     errors = []
 
@@ -38,6 +40,11 @@ def main():
         root = ET.parse(a.appcast).getroot()
     except ET.ParseError as e:
         sys.exit(f"appcast inválido (XML): {e}")
+    raw = open(a.appcast, encoding="utf-8").read()
+    check("sparkle-signatures" in raw, "feed sem assinatura embutida (sparkle-signatures)")
+    feed_ok = subprocess.run([a.sign_update, "--verify", "--ed-key-file", a.key_file, a.appcast],
+                             capture_output=True).returncode == 0
+    check(feed_ok, "assinatura do FEED não confere (feed editado depois de assinado?)")
     items = root.findall("./channel/item")
     check(len(items) == 1, f"esperava 1 item, achei {len(items)}")
     if items:
