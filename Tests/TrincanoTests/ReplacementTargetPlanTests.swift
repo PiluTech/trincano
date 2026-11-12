@@ -204,15 +204,50 @@ struct PrivilegedReplaceScriptTests {
         #expect(!FileManager.default.fileExists(atPath: dir.appendingPathComponent("pwned").path))
     }
 
-    @Test func checksRunBeforeAnyDestructiveCommand() {
+    @Test func removesTheOldCopyOnlyAfterTheNewOneIsBuilt() {
         let script = PrivilegedReplaceScript.build(source: "/s", destination: "/d", expectedBundleIdentifier: id)
-        let rm = script.range(of: "/bin/rm")
         let ditto = script.range(of: "/usr/bin/ditto")
         let check = script.range(of: "[ -L")
-        #expect(rm != nil && ditto != nil && check != nil)
-        if let rm, let ditto, let check {
+        let rm = script.range(of: "/bin/rm -rf \"$dest\"")
+        let mv = script.range(of: "/bin/mv")
+        #expect(ditto != nil && check != nil && rm != nil && mv != nil)
+        if let ditto, let check, let rm, let mv {
+            #expect(ditto.lowerBound < check.lowerBound)
             #expect(check.lowerBound < rm.lowerBound)
-            #expect(rm.lowerBound < ditto.lowerBound)
+            #expect(rm.lowerBound < mv.lowerBound)
         }
+    }
+
+    @Test func failedCopyLeavesTheInstalledAppAndNoLeftovers() throws {
+        let dir = try makeSandbox()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let missingSource = dir.appendingPathComponent("nothing.app")
+        let destination = try makeBundle(at: dir.appendingPathComponent("dest.app"), marker: "keep")
+        let status = try run(source: missingSource, destination: destination)
+        #expect(status != 0)
+        #expect(ReplacementTargetPlan.Verdict(scriptExitCode: status) == nil)
+        #expect(marker(destination) == "keep")
+        let names = try FileManager.default.contentsOfDirectory(atPath: dir.path)
+        #expect(names == ["dest.app"])
+    }
+
+    @Test func refusalLeavesNoTemporaryFolder() throws {
+        let dir = try makeSandbox()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let source = try makeBundle(at: dir.appendingPathComponent("src.app"))
+        let destination = try makeBundle(at: dir.appendingPathComponent("dest.app"), bundleID: "com.example.Other")
+        _ = try run(source: source, destination: destination)
+        let names = try FileManager.default.contentsOfDirectory(atPath: dir.path).sorted()
+        #expect(names == ["dest.app", "src.app"])
+    }
+
+    @Test func successLeavesNoTemporaryFolder() throws {
+        let dir = try makeSandbox()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let source = try makeBundle(at: dir.appendingPathComponent("src.app"))
+        let destination = try makeBundle(at: dir.appendingPathComponent("dest.app"), marker: "old")
+        #expect(try run(source: source, destination: destination) == 0)
+        let names = try FileManager.default.contentsOfDirectory(atPath: dir.path).sorted()
+        #expect(names == ["dest.app", "src.app"])
     }
 }
