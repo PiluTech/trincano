@@ -1,0 +1,201 @@
+name: Release
+
+# Só por tag vX.Y.Z. Fluxo: verify (sem segredos) -> ci -> sign (environment "release", com revisor
+# obrigatório) -> publish (rascunho; confere o sha256). Os segredos só existem no job "sign".
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  verify:
+    name: Verificar a tag
+    runs-on: macos-26
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+
+      - name: Tag, versão do projeto e notas
+        id: v
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "tag fora do formato vX.Y.Z: $TAG"; exit 1; }
+          VERSION="${TAG#v}"
+          # A tag precisa apontar para um commit que já está na main (nada de release de branch solto).
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "o commit da tag não está na main"; exit 1; }
+          project="$(xcodebuild -project Ice.xcodeproj -scheme Ice -configuration Release -showBuildSettings 2>/dev/null \
+            | awk -F' = ' '/ MARKETING_VERSION /{print $2; exit}')"
+          [[ "$project" == "$VERSION" ]] || { echo "MARKETING_VERSION ($project) difere da tag ($VERSION)"; exit 1; }
+          [[ -f "docs/notas-da-versao/$VERSION.html" ]] || { echo "faltam docs/notas-da-versao/$VERSION.html"; exit 1; }
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  ci:
+    name: Validação
+    needs: verify
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+
+  sign:
+    name: Build, assinatura, notarização e appcast
+    needs: [verify, ci]
+    runs-on: macos-26
+    timeout-minutes: 60
+    # Revisor obrigatório (PiluVitu) e política "só tags v*" são do environment (docs/release.md).
+    environment: release
+    permissions:
+      contents: read
+    outputs:
+      dmg_sha256: ${{ steps.out.outputs.dmg_sha256 }}
+    env:
+      TAG: ${{ github.ref_name }}
+      VERSION: ${{ needs.verify.outputs.version }}
+    steps:
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+
+      - name: Finder aceita AppleScript (falha cedo, antes de gastar a notarização)
+        run: osascript -e 'tell application "Finder" to get name of startup disk'
+
+      - name: Chaveiro temporário com o Developer ID
+        env:
+          DEVELOPER_ID_P12_BASE64: ${{ secrets.DEVELOPER_ID_P12_BASE64 }}
+          DEVELOPER_ID_P12_PASSWORD: ${{ secrets.DEVELOPER_ID_P12_PASSWORD }}
+        run: |
+          set -euo pipefail
+          umask 077
+          KC="$RUNNER_TEMP/release.keychain-db"
+          KC_PW="$(uuidgen)"
+          echo "::add-mask::$KC_PW"
+          echo "KEYCHAIN=$KC" >> "$GITHUB_ENV"
+          printf '%s' "$DEVELOPER_ID_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/developer-id.p12"
+          security create-keychain -p "$KC_PW" "$KC"
+          security set-keychain-settings -lut 3600 "$KC"
+          security unlock-keychain -p "$KC_PW" "$KC"
+          security import "$RUNNER_TEMP/developer-id.p12" -P "$DEVELOPER_ID_P12_PASSWORD" \
+            -A -t cert -f pkcs12 -k "$KC"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PW" "$KC" >/dev/null
+          rm -f "$RUNNER_TEMP/developer-id.p12"
+          # O chaveiro temporário entra na lista de busca, antes dos demais.
+          existing="$(security list-keychains -d user | tr -d '"')"
+          # shellcheck disable=SC2086  # a lista de chaveiros precisa separar por palavra
+          security list-keychains -d user -s "$KC" $existing
+          # O .p12 pode trazer outras identidades: escolhe só a "Developer ID Application".
+          ids="$(security find-identity -v -p codesigning "$KC" | sed -n 's/.*"\(Developer ID Application:.*\)"/\1/p' | sort -u)"
+          [[ "$(printf '%s\n' "$ids" | grep -c .)" -eq 1 ]] || { echo "esperava 1 identidade Developer ID Application no .p12"; exit 1; }
+          echo "DEVELOPER_ID=$ids" >> "$GITHUB_ENV"
+
+      - name: Chaves da notarização e do Sparkle (arquivos temporários 600)
+        env:
+          NOTARY_P8_BASE64: ${{ secrets.NOTARY_P8_BASE64 }}
+          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s' "$NOTARY_P8_BASE64" | base64 --decode > "$RUNNER_TEMP/notary.p8"
+          printf '%s' "$SPARKLE_ED_PRIVATE_KEY" > "$RUNNER_TEMP/sparkle.key"
+          echo "NOTARY_KEY_FILE=$RUNNER_TEMP/notary.p8" >> "$GITHUB_ENV"
+          echo "SPARKLE_KEY_FILE=$RUNNER_TEMP/sparkle.key" >> "$GITHUB_ENV"
+
+      - name: scripts/release.sh (build, assinatura, notarização, staple, .dmg e appcast)
+        env:
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER: ${{ secrets.NOTARY_ISSUER }}
+        run: |
+          set -euo pipefail
+          # O script exige que a tag aponte para o HEAD (o checkout da tag já garante).
+          scripts/release.sh
+
+      - name: Conferir e empacotar
+        id: out
+        run: |
+          set -euo pipefail
+          DMG="build/release/Trincano-$VERSION.dmg"
+          [[ -f "$DMG" && -f build/release/appcast.xml ]] || { echo "faltam o .dmg ou o appcast"; exit 1; }
+          SHA="$(shasum -a 256 "$DMG" | cut -d' ' -f1)"
+          grep -q "sha256: $SHA" "$DMG.source.txt" || { echo "sha256 difere do registrado em .source.txt"; exit 1; }
+          ( cd build/release && shasum -a 256 "Trincano-$VERSION.dmg" appcast.xml > SHA256SUMS.txt )
+          echo "dmg_sha256=$SHA" >> "$GITHUB_OUTPUT"
+
+      # actions/upload-artifact v7.0.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: release-${{ github.ref_name }}
+          path: |
+            build/release/Trincano-${{ needs.verify.outputs.version }}.dmg
+            build/release/appcast.xml
+            build/release/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Limpar chaveiro e arquivos de chave
+        if: always()
+        run: |
+          security delete-keychain "${KEYCHAIN:-/nonexistent}" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/developer-id.p12" "$RUNNER_TEMP/notary.p8" "$RUNNER_TEMP/sparkle.key"
+
+  publish:
+    name: Rascunho do release
+    needs: [verify, sign]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ github.ref_name }}
+      VERSION: ${{ needs.verify.outputs.version }}
+      EXPECTED_SHA256: ${{ needs.sign.outputs.dmg_sha256 }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      # actions/download-artifact v8.0.2
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: release-${{ github.ref_name }}
+          path: dist
+
+      - name: Conferir o sha256 e o appcast
+        run: |
+          set -euo pipefail
+          cd dist
+          ACTUAL="$(sha256sum "Trincano-$VERSION.dmg" | cut -d' ' -f1)"
+          [[ "$ACTUAL" == "$EXPECTED_SHA256" ]] || { echo "sha256 do .dmg ($ACTUAL) difere do job de assinatura ($EXPECTED_SHA256)"; exit 1; }
+          sha256sum -c SHA256SUMS.txt
+          grep -q "releases/download/$TAG/Trincano-$VERSION.dmg" appcast.xml || { echo "o appcast não aponta para $TAG"; exit 1; }
+          size="$(stat -c %s "Trincano-$VERSION.dmg")"
+          grep -q "length=\"$size\"" appcast.xml || { echo "length do appcast difere do tamanho do .dmg ($size)"; exit 1; }
+
+      - name: Criar o release como rascunho
+        run: |
+          set -euo pipefail
+          {
+            echo "Trincano $VERSION"
+            echo
+            echo "- sha256 do .dmg: \`$EXPECTED_SHA256\`"
+            echo "- Código-fonte: tag \`$TAG\` (commit \`$GITHUB_SHA\`)"
+            echo "- Assinado com Developer ID, notarizado e grampeado; appcast assinado com a chave EdDSA do Sparkle."
+            echo
+            echo "Rascunho: confira os arquivos e publique. O appcast.xml deste release é o feed de atualização do app."
+          } > notes.md
+          gh release create "$TAG" --draft --verify-tag --title "Trincano $VERSION" --notes-file notes.md \
+            "dist/Trincano-$VERSION.dmg" dist/appcast.xml dist/SHA256SUMS.txt

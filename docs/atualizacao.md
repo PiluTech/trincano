@@ -20,7 +20,7 @@ O Trincano volta a usar o **Sparkle 2.10.1** (SPM, versão exata fixada em `Ice.
 
 ## Fazer um release
 1. Subir `MARKETING_VERSION` e `CURRENT_PROJECT_VERSION` (o Sparkle compara o **build**, não a versão curta) e criar `docs/notas-da-versao/<versão>.html` (pt-BR, curto, sem `<script>`, sem `on*=`).
-2. Criar a tag `v<versão>` no commit e rodar `scripts/release.sh` com `NOTARY_*` e `SPARKLE_OP_REF=op://Personal/<id do item>/password` (o título tem `:`, use o ID do item: `op item get "Trincano: chave Sparkle (EdDSA)" --vault Personal --format json`).
+2. (Pelo GitHub Actions: ver [docs/release.md](release.md); empurre a tag `v<versão>` e o `release.yml` faz o resto, deixando o release como rascunho.) Ou, localmente: criar a tag `v<versão>` no commit e rodar `scripts/release.sh` com `NOTARY_*` e `SPARKLE_OP_REF=op://Personal/<id do item>/password` (o título tem `:`, use o ID do item: `op item get "Trincano: chave Sparkle (EdDSA)" --vault Personal --format json`).
 3. Saída em `build/release/`: `Trincano-<versão>.dmg` e `appcast.xml` (`scripts/appcast.sh` gera, assina o feed e **confere**: XML, assinatura do feed, https do repo na tag, `length`, assinatura contra a chave do `Info.plist`, build maior que o da tag anterior, notas sem script).
 4. Publicar: criar o release `v<versão>` no GitHub com o `.dmg` **e** o `appcast.xml` como assets. O upload é manual.
 
