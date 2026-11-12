@@ -65,25 +65,44 @@ enum AppMover {
     private enum CopyError: Error {
         case failed
         case destinationIsAnotherApp
+        case destinationIsSymlink
+    }
+
+    /// Reads the destination without following links and applies
+    /// `ReplacementTargetPlan`. Called before every destructive step.
+    private static func verifyDestination(_ destination: URL) throws {
+        var info = stat()
+        let exists = lstat(destination.path, &info) == 0
+        let isSymbolicLink = exists && (info.st_mode & S_IFMT) == S_IFLNK
+        let verdict = ReplacementTargetPlan.evaluate(
+            exists: exists,
+            isSymbolicLink: isSymbolicLink,
+            bundleIdentifier: exists && !isSymbolicLink ? Bundle(url: destination)?.bundleIdentifier : nil,
+            expectedBundleIdentifier: Bundle.main.bundleIdentifier
+        )
+        switch verdict {
+        case .safe: break
+        case .refusedSymlink: throw CopyError.destinationIsSymlink
+        case .refusedOtherApp: throw CopyError.destinationIsAnotherApp
+        }
     }
 
     /// Copies the bundle, replacing an older copy. Asks for the password only
     /// when the plain copy is not permitted.
     private static func copy(from source: URL, to destination: URL) throws {
         let fileManager = FileManager.default
-        // Only replace an existing copy of this same app (same bundle identifier).
-        if
-            fileManager.fileExists(atPath: destination.path),
-            Bundle(url: destination)?.bundleIdentifier != Bundle.main.bundleIdentifier
-        {
-            throw CopyError.destinationIsAnotherApp
-        }
+        // Only replace an existing copy of this same app (same bundle
+        // identifier), and never through a symbolic link.
+        try verifyDestination(destination)
         do {
             if fileManager.fileExists(atPath: destination.path) {
                 try fileManager.trashItem(at: destination, resultingItemURL: nil)
             }
             try fileManager.copyItem(at: source, to: destination)
         } catch {
+            // The password prompt can take a while and the first attempt may
+            // have failed halfway: check again right before the `rm -rf`.
+            try verifyDestination(destination)
             try copyWithAdministratorPrivileges(from: source, to: destination)
         }
         // The copy was already approved by Gatekeeper (it is the running app),
