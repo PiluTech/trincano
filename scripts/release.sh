@@ -4,6 +4,9 @@
 # Uso: scripts/release.sh            (compila, assina, notariza, grampeia e verifica)
 #      SKIP_BUILD=1 scripts/release.sh   (reaproveita build/Build/Products/Release/Trincano.app)
 #      SKIP_NOTARIZE=1 scripts/release.sh (só assina e monta o .dmg; NÃO serve para distribuir)
+#      SKIP_APPCAST=1 scripts/release.sh  (notariza mas não gera o appcast; o CI roda scripts/appcast.sh
+#                                          depois, num passo à parte, para a chave do Sparkle não ficar
+#                                          visível ao build)
 #
 # Variáveis (nenhum segredo fica no repo):
 #   DEVELOPER_ID       identidade "Developer ID Application: ... (TEAMID)"; padrão: a única do keychain
@@ -11,6 +14,9 @@
 #   NOTARY_ISSUER      Issuer ID da chave
 #   NOTARY_OP_REF      referência op:// do .p8 no 1Password (lido na hora; o arquivo temporário
 #                      fica com chmod 600 e é apagado ao sair, mesmo em erro)
+#   NOTARY_P8_BASE64   alternativa para CI: o .p8 em base64. É lido logo no início e REMOVIDO do ambiente
+#                      (o xcodebuild e as build phases não o veem); o arquivo temporário 600 só nasce na
+#                      notarização e é apagado ao sair
 #   NOTARY_KEY_FILE    alternativa ao 1Password: caminho de um .p8 já existente (não é apagado)
 #   SPARKLE_OP_REF     op://... da chave EdDSA do Sparkle (item "Trincano: chave Sparkle (EdDSA)", cofre
 #                      Personal; use o ID do item na referência). Lida para arquivo temporário 600, apagado ao sair
@@ -21,6 +27,9 @@
 #        o upload na release do GitHub é manual)
 set -euo pipefail
 cd "${0:A:h}/.."
+# Chave da notarização vinda do CI: guarda numa variável do shell e tira do ambiente exportado.
+NOTARY_P8_B64="${NOTARY_P8_BASE64:-}"
+unset NOTARY_P8_BASE64
 
 APP_NAME="Trincano"
 CONFIG="Release"
@@ -98,8 +107,14 @@ prepare_notary() {
   local keyfile
   if [[ -n "${NOTARY_KEY_FILE:-}" ]]; then
     keyfile="$NOTARY_KEY_FILE"
+  elif [[ -n "$NOTARY_P8_B64" ]]; then
+    umask 077
+    KEYTMP="$(mktemp -t trincano-notary)"
+    chmod 600 "$KEYTMP"
+    printf '%s' "$NOTARY_P8_B64" | base64 --decode > "$KEYTMP" || die "NOTARY_P8_BASE64 inválido"
+    keyfile="$KEYTMP"
   else
-    [[ -n "${NOTARY_OP_REF:-}" ]] || die "defina NOTARY_OP_REF (op://...) ou NOTARY_KEY_FILE"
+    [[ -n "${NOTARY_OP_REF:-}" ]] || die "defina NOTARY_OP_REF (op://...), NOTARY_P8_BASE64 ou NOTARY_KEY_FILE"
     umask 077
     KEYTMP="$(mktemp -t trincano-notary)"
     chmod 600 "$KEYTMP"
@@ -219,7 +234,9 @@ if [[ -z "${SKIP_NOTARIZE:-}" ]]; then
 else
   echo "AVISO: SKIP_NOTARIZE ativo; este .dmg não está notarizado."
 fi
-if [[ -z "${SKIP_NOTARIZE:-}" ]]; then
+if [[ -n "${SKIP_APPCAST:-}" ]]; then
+  echo "AVISO: SKIP_APPCAST ativo; rode scripts/appcast.sh em seguida (o CI faz isso num passo à parte)."
+elif [[ -z "${SKIP_NOTARIZE:-}" ]]; then
   # Appcast do Sparkle: assina o .dmg FINAL (o stapler mudou os bytes) e confere tudo.
   scripts/appcast.sh "$DMG" "$APP" "$OUT" "$TAG"
 else

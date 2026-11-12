@@ -105,26 +105,32 @@ jobs:
           [[ "$(printf '%s\n' "$ids" | grep -c .)" -eq 1 ]] || { echo "esperava 1 identidade Developer ID Application no .p12"; exit 1; }
           echo "DEVELOPER_ID=$ids" >> "$GITHUB_ENV"
 
-      - name: Chaves da notarização e do Sparkle (arquivos temporários 600)
-        env:
-          NOTARY_P8_BASE64: ${{ secrets.NOTARY_P8_BASE64 }}
-          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
-        run: |
-          set -euo pipefail
-          umask 077
-          printf '%s' "$NOTARY_P8_BASE64" | base64 --decode > "$RUNNER_TEMP/notary.p8"
-          printf '%s' "$SPARKLE_ED_PRIVATE_KEY" > "$RUNNER_TEMP/sparkle.key"
-          echo "NOTARY_KEY_FILE=$RUNNER_TEMP/notary.p8" >> "$GITHUB_ENV"
-          echo "SPARKLE_KEY_FILE=$RUNNER_TEMP/sparkle.key" >> "$GITHUB_ENV"
-
-      - name: scripts/release.sh (build, assinatura, notarização, staple, .dmg e appcast)
+      # A .p8 vai por variável só neste passo e o release.sh a tira do ambiente antes do build; o
+      # arquivo temporário só existe durante a notarização. A chave do Sparkle NÃO entra aqui.
+      - name: scripts/release.sh (build, assinatura, notarização, staple e .dmg; sem appcast)
         env:
           NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
           NOTARY_ISSUER: ${{ secrets.NOTARY_ISSUER }}
+          NOTARY_P8_BASE64: ${{ secrets.NOTARY_P8_BASE64 }}
+          SKIP_APPCAST: "1"
         run: |
           set -euo pipefail
           # O script exige que a tag aponte para o HEAD (o checkout da tag já garante).
           scripts/release.sh
+
+      # A chave EdDSA do Sparkle só existe neste passo: arquivo 600, apagado na hora (e pelo always()).
+      - name: Appcast assinado (única etapa com a chave do Sparkle)
+        env:
+          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          KEY="$RUNNER_TEMP/sparkle.key"
+          trap 'rm -f "$KEY"' EXIT
+          printf '%s' "$SPARKLE_ED_PRIVATE_KEY" > "$KEY"
+          SPARKLE_KEY_FILE="$KEY" scripts/appcast.sh \
+            "build/release/Trincano-$VERSION.dmg" build/Build/Products/Release/Trincano.app build/release "$TAG"
+          rm -f "$KEY"
 
       - name: Conferir e empacotar
         id: out
@@ -152,7 +158,7 @@ jobs:
         if: always()
         run: |
           security delete-keychain "${KEYCHAIN:-/nonexistent}" 2>/dev/null || true
-          rm -f "$RUNNER_TEMP/developer-id.p12" "$RUNNER_TEMP/notary.p8" "$RUNNER_TEMP/sparkle.key"
+          rm -f "$RUNNER_TEMP/developer-id.p12" "$RUNNER_TEMP/sparkle.key"
 
   publish:
     name: Rascunho do release
