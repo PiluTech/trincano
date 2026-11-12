@@ -9,6 +9,7 @@ O plano das 7 fases foi concluído (a fase 7, Swift 6, entrou pelo PR #12); veja
 - [docs/estado-atual.md](docs/estado-atual.md): estado final, fases e PRs, pendências abertas.
 - [docs/plano-inicial.md](docs/plano-inicial.md): base, estado no Tahoe, dores do upstream, mapa de responsividade, notch, identidade, fases e perguntas.
 - [docs/decisoes.md](docs/decisoes.md): decisões da fase 1 (identidade, créditos GPL, importação do Ice, testes) e da 0.13.0 (Sparkle de volta, com consentimento).
+- [docs/release.md](docs/release.md): CI e release pelo GitHub Actions (workflows, environment `release`, segredos com `op read | gh secret set`, pontos a validar).
 - [docs/atualizacao.md](docs/atualizacao.md): Sparkle (consentimento, chave EdDSA no 1Password, appcast, como fazer um release), .dmg arrumado e "Mover para Aplicativos".
 - [docs/assinatura.md](docs/assinatura.md): certificado local, troca pelo Developer ID, checagem do XPC.
 - [docs/roteiro-teste.md](docs/roteiro-teste.md): roteiro manual da fase 1.
@@ -20,7 +21,7 @@ O plano das 7 fases foi concluído (a fase 7, Swift 6, entrou pelo PR #12); veja
 - [docs/prints/README.md](docs/prints/README.md): prints do catálogo com fixture (modo de captura só Debug, `scripts/capture-prints.sh`).
 
 ## Comandos
-- `scripts/check.sh`: swiftlint (`--strict`) + testes + build Release. Tudo local (CI do GitHub sem minutos).
+- `scripts/check.sh`: swiftlint (`--strict`) + testes + build Release. O mesmo roda no GitHub Actions (`.github/workflows/ci.yml`, runner gratuito por ser repo público).
 - `scripts/build.sh [Release|Debug]`: build assinado (`SIGN_IDENTITY` para trocar o certificado). Saída em `build/`.
 - `scripts/release.sh`: build Release assinado com Developer ID (XPC e app, runtime reforçado, sem entitlements) + `.dmg` (LICENSE e crédito ao Ice) + `notarytool` + `stapler` + `spctl`; recusa versão `-dev`/árvore suja, grava commit/tag no .dmg e em `.source.txt`; saída em `build/release/`. Precisa de `NOTARY_KEY_ID`, `NOTARY_ISSUER` e `NOTARY_OP_REF` (chave `.p8` lida do 1Password para arquivo temporário 600, nunca no repo/log).
 - `scripts/release.sh` também assina o Sparkle aninhado, monta o .dmg arrumado (AppleScript no Finder) e gera, assina e confere o `appcast.xml` (`scripts/appcast.sh`, usa `SPARKLE_OP_REF`); exige `docs/notas-da-versao/<versão>.html`. `scripts/test-appcast.sh` (par de chaves descartável; feed assinado e exigido no Info.plist) roda no `check.sh`. `scripts/add-sparkle.rb` refixa o pacote (versão exata). "Mover para Aplicativos": decisão em `MoveToApplicationsPlan` (testada), execução em `AppMover`; o destino `/Applications/Trincano.app` só é substituído se não for symlink, for um bundle completo (Info.plist + executável) e tiver o mesmo bundle id (`ReplacementTargetPlan`, testada, motivo próprio para cada recusa). Checagem cedo no app (mensagem clara, cópia sem senha) e a que vale DENTRO do script do administrador (`PrivilegedReplaceScript`, testado rodando como usuário em pasta temporária), logo antes do `rm`, depois da senha (o `ditto` vai antes para uma pasta irmã oculta e um `mv` troca no fim, então `ditto` que falha não deixa `/Applications` sem o app); sobra só uma janela de poucos comandos de shell.
@@ -29,7 +30,7 @@ O plano das 7 fases foi concluído (a fase 7, Swift 6, entrou pelo PR #12); veja
 - Testes: `xcodebuild -project Ice.xcodeproj -scheme TrincanoTests -destination 'platform=macOS' test`. Lógica pura vai em `Ice/Utilities/Pure/` ou `Shared/Utilities/` (compilada direto no alvo de testes; sem host). Recriar o alvo: `ruby scripts/add-test-target.rb`.
 
 ## Regras
-- Manter LICENSE, cabeçalhos e créditos ao Ice; código-fonte público; sem telemetria e **sem rede, exceto o appcast do Sparkle, só com consentimento** (`SUEnableAutomaticChecks` NUNCA no `Info.plist`; Debug e captura nunca iniciam o updater; a importação do Ice nunca copia `SU*`). Chave EdDSA só no 1Password; `SUFeedURL` só https. Release: ver `docs/atualizacao.md`.
+- Manter LICENSE, cabeçalhos e créditos ao Ice; código-fonte público; sem telemetria e **sem rede, exceto o appcast do Sparkle, só com consentimento** (`SUEnableAutomaticChecks` NUNCA no `Info.plist`; Debug e captura nunca iniciam o updater; a importação do Ice nunca copia `SU*`). Chave EdDSA só no 1Password; `SUFeedURL` só https. Release: ver `docs/atualizacao.md` e `docs/release.md` (tag `vX.Y.Z` dispara o `release.yml`; assinatura só no environment `release`, com revisor; o release sai como rascunho).
 - Nome/IDs: `Trincano`, `br.com.pilutech.trincano`. Alvo e módulo Swift seguem `Ice`; tipos mantêm prefixo `Ice` (cherry-pick limpo, use `git cherry-pick -x`).
 - XPC: nunca desligar a checagem de peer; ver `XPCPeerPolicy`.
 - Swift 6 com concorrência estrita (zero avisos); `@unchecked Sendable`/`nonisolated(unsafe)`/`assumeIsolated` só com a invariante comentada. Interface em PT-BR e en (String Catalog); texto novo entra no catálogo.
