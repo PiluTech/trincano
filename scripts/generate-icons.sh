@@ -24,6 +24,8 @@ done
 for name px in "${(@kv)SIZES}"; do
   cp "$TMP/$px/app-barra-congelada.svg.png" "$ICONSET/$name.png"
 done
+# Sem metadados (eXIf/tEXt/iTXt/zTXt): só reescreve os chunks, os pixels ficam como estão.
+python3 -I scripts/strip-png-metadata.py "$ICONSET"/icon_*.png
 
 # Glifos da barra de menus: 18/36/54 px (@1x/@2x/@3x), templates.
 render_glyph() {  # svg  nome-do-imageset
@@ -37,6 +39,7 @@ render_glyph() {  # svg  nome-do-imageset
 }
 render_glyph "$SRC/opcao2-barra-escondido.svg" FrostBarFill
 render_glyph "$SRC/opcao2-barra-visivel.svg" FrostBarStroke
+python3 -I scripts/strip-png-metadata.py "$ASSETS"/ControlItemImages/FrostBar/*/*.png
 
 # Registro de proveniência dos PNGs do app.
 ( cd "$ICONSET" && shasum -a 256 icon_*.png ) > "$SRC/SHA256SUMS"

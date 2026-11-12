@@ -167,4 +167,35 @@ struct IconAssetsTests {
             #expect(actual == hash, "\(file) does not match the generated art")
         }
     }
+
+    /// Names of every chunk in a PNG file, in order.
+    private func chunkNames(of url: URL) throws -> [String] {
+        let data = try Data(contentsOf: url)
+        let signature: [UInt8] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
+        #expect(Array(data.prefix(8)) == signature, "\(url.lastPathComponent) is not a PNG")
+        var names: [String] = []
+        var offset = 8
+        while offset + 8 <= data.count {
+            let length = data[offset..<offset + 4].reduce(0) { ($0 << 8) | Int($1) }
+            names.append(String(decoding: data[offset + 4..<offset + 8], as: UTF8.self))
+            offset += 12 + length
+        }
+        return names
+    }
+
+    @Test func iconAssetsCarryNoMetadataChunks() throws {
+        let forbidden: Set<String> = ["eXIf", "tEXt", "iTXt", "zTXt"]
+        let glyphs = catalog.appendingPathComponent("ControlItemImages/FrostBar")
+        var files = try FileManager.default.contentsOfDirectory(at: appIconDir, includingPropertiesForKeys: nil)
+        let enumerator = FileManager.default.enumerator(at: glyphs, includingPropertiesForKeys: nil)
+        while let url = enumerator?.nextObject() as? URL {
+            files.append(url)
+        }
+        let pngs = files.filter { $0.pathExtension == "png" }
+        #expect(pngs.count >= 10)
+        for url in pngs {
+            let found = Set(try chunkNames(of: url)).intersection(forbidden)
+            #expect(found.isEmpty, "\(url.lastPathComponent) has metadata chunks: \(found.sorted())")
+        }
+    }
 }
