@@ -1,6 +1,6 @@
 # Trincano
 
-Fork do [Ice](https://github.com/jordanbaird/Ice) (jordanbaird, GPL-3.0) com suporte ao macOS 26 e foco em Macs com notch. Base: `upstream/macos-26`. Remoto `origin` = PiluVitu/trincano (público), `upstream` = jordanbaird/Ice. PRs só contra a `main` do fork, nunca contra o upstream.
+Fork do [Ice](https://github.com/jordanbaird/Ice) (jordanbaird, GPL-3.0) com suporte ao macOS 26 e foco em Macs com notch. Base: `upstream/macos-26`. Remoto `origin` = PiluTech/trincano (público), `upstream` = jordanbaird/Ice. PRs só contra a `main` do fork, nunca contra o upstream.
 
 ## Estado
 O plano das 7 fases foi concluído (a fase 7, Swift 6, entrou pelo PR #12); veja [docs/estado-atual.md](docs/estado-atual.md) (resumo, números de referência e a lista de **pendências abertas**). Distribuição fora da App Store: `.dmg` com Developer ID, notarizado e grampeado por `scripts/release.sh` (ver [docs/assinatura.md](docs/assinatura.md)); publicar no site exige OK do Paulo.

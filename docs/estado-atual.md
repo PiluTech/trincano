@@ -2,7 +2,7 @@
 
 Fork do Ice (GPL-3.0) para o Mac do Paulo (MacBook Air M4 com notch, macOS 26 Tahoe). Distribuído como .dmg com Developer ID e notarizado (`scripts/release.sh`, ver `docs/assinatura.md`); o limite do XPC some com Team ID.
 
-## As 7 fases (PRs no fork `PiluVitu/trincano`)
+## As 7 fases (PRs no fork `PiluTech/trincano`)
 | Fase | O que entregou | PR |
 |---|---|---|
 | 0 | Análise e plano (`plano-inicial.md`) | commit local, depois #1 |

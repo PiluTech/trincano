@@ -20,6 +20,12 @@ Everything stays on your Mac. Trincano has no telemetry, no analytics and **no n
 
 Releases are `.dmg` files signed with a Developer ID and notarized by Apple (see [docs/assinatura.md](docs/assinatura.md)); each one names the tag and commit of its source code (GPL). The signature differs from the local-certificate build, so **Accessibility and Screen Recording must be granted again** in System Settings > Privacy & Security the first time you open a release.
 
+## Install with Homebrew
+
+Coming soon (the Homebrew tap is not published yet).
+
+When it is available, see the permissions note above: grant Accessibility and Screen Recording on first open.
+
 ## Build and install
 
 Requires Xcode 26 and macOS 26. To build it yourself, use the scripts below; notarized `.dmg` releases are described in the section above.
