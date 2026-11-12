@@ -41,6 +41,8 @@ Saída: `build/release/Trincano-<versão>.dmg`. O crédito ao Ice também está 
 | Com Team ID (Developer ID / Apple Development) | mesmo time **e** signing identifier esperado |
 | Sem Team ID (certificado local ou ad hoc) | signing identifier exato (requisito leve `signing-identifier`) |
 
+**Sparkle (0.13.0):** o `release.sh` assina `Sparkle.framework` de dentro para fora (Installer.xpc, Downloader.xpc com `--preserve-metadata=entitlements`, Autoupdate, Updater.app, framework) antes do app, com Developer ID e runtime reforçado. A assinatura EdDSA do update é outra coisa (ver `atualizacao.md`).
+
 **Limite conhecido (MÉDIO, em aberto):** o `signing-identifier` sozinho **não prova que o peer foi assinado com o nosso certificado**. Verificado offline: copiar o `.xpc`, reassinar ad hoc (`codesign -f -s -`) mantém `identifier "…MenuBarItemService"` satisfeito, mas **falha** em `identifier "…" and certificate leaf = H"…"`. A API Swift `XPCPeerRequirement` do SDK 26 não aceita string de requisito nem certificado (só entitlement, mesmo time, plataforma e requisitos leves), e `XPCSession`/`XPCListener` não expõem o handle C para `xpc_*_set_peer_code_signing_requirement`. Prender o certificado exigiria trocar o transporte XPC por conexão C ou usar `cdhash`; fica como tarefa própria.
 Mitigação atual: o helper é um XPC service embutido no app, visível só ao app que o contém, e a checagem continua ativa (melhor que os PRs do upstream, que a removem). Com Developer ID o requisito volta a ser "mesmo time" e o limite some.
 

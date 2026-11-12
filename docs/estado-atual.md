@@ -30,7 +30,8 @@ Ocioso: CPU ~0 %, memória ~56 MB, pico ~153 MB. Barra do Trincano: `iceBar.show
 Segurança e distribuição
 1. **XPC sem certificado**: com o certificado local só o `signing-identifier` é exigido (não prova o certificado). Resolver com Developer ID (volta "mesmo time") ou cdhash/`xpc_connection_*`.
 2. **Developer ID/notarização** quando a aprovação da Apple sair; chave de assinatura local sem senha (só uso local).
-3. Importação das configurações do Ice: validar tipos/intervalos e prefixos exatos; limpar `SUEnableAutomaticChecks` e Sparkle do `Acknowledgements`.
+3. Importação das configurações do Ice: validar tipos/intervalos e prefixos exatos (as chaves `SU*` já nunca são copiadas, com teste).
+3b. **0.13.0 (Sparkle, .dmg arrumado, Mover para Aplicativos)**: ver `atualizacao.md`. Pendente do Paulo: OK do texto público (`PRODUTO.md`, política de privacidade) e criar o cask com `auto_updates true`; validar ao vivo a janela de atualização (precisa de um release publicado) e o alerta de mover.
 
 Visual e acessibilidade
 4. **Ícone**: no macOS 26 o ícone PNG aparece numa **placa branca**; fazer o `.icon` no Icon Composer (GUI). Reprodutibilidade do gerador (`qlmanage`/`sips` mudam entre versões do macOS).

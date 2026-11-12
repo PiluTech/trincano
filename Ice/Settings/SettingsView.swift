@@ -140,7 +140,7 @@ struct SettingsView: View {
         case .advanced:
             AdvancedSettingsPane(settings: appState.settings.advanced)
         case .about:
-            AboutSettingsPane()
+            AboutSettingsPane(updatesManager: appState.updatesManager)
         }
     }
 }

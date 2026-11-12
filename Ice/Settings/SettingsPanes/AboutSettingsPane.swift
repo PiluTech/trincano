@@ -7,6 +7,7 @@ import SwiftUI
 
 struct AboutSettingsPane: View {
     @EnvironmentObject var appState: AppState
+    @ObservedObject var updatesManager: UpdatesManager
     @Environment(\.openURL) private var openURL
 
     private var acknowledgementsURL: URL {
@@ -28,6 +29,13 @@ struct AboutSettingsPane: View {
 
     private var issuesURL: URL {
         contributeURL.appendingPathComponent("issues")
+    }
+
+    private var lastCheckText: String {
+        if let date = updatesManager.lastUpdateCheckDate {
+            return String(localized: "Last checked: \(date.formatted(date: .abbreviated, time: .shortened))")
+        }
+        return String(localized: "Not checked yet.")
     }
 
     var body: some View {
@@ -63,10 +71,22 @@ struct AboutSettingsPane: View {
                 )
             }
 
+            IceSection("Updates") {
+                Toggle("Check for updates automatically", isOn: $updatesManager.automaticallyChecksForUpdates)
+                    .disabled(!updatesManager.canCheckForUpdates)
+                provenanceRow(
+                    title: nil,
+                    value: Text(lastCheckText),
+                    action: ("Check for Updates…", { updatesManager.checkForUpdates() }),
+                    showsExternalIcon: false
+                )
+                .disabled(!updatesManager.canCheckForUpdates)
+            }
+
             IceSection("Privacy") {
                 provenanceRow(
                     title: nil,
-                    value: Text("Everything stays on your Mac: Trincano has no telemetry and does not check for updates.")
+                    value: Text("Everything stays on your Mac: Trincano has no telemetry. It only reaches the internet to look for updates, and only if you allow it.")
                 )
             }
 
