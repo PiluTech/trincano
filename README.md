@@ -20,6 +20,14 @@ Everything stays on your Mac. Trincano has no telemetry, no analytics and **no n
 
 Releases are `.dmg` files signed with a Developer ID and notarized by Apple (see [docs/assinatura.md](docs/assinatura.md)); each one records the source commit/tag (GPL). The signature differs from the local-certificate build, so **Accessibility and Screen Recording must be granted again** in System Settings > Privacy & Security the first time you open a release.
 
+## Install with Homebrew
+
+```sh
+brew install --cask pilutech/tap/trincano
+```
+
+See the permissions note above: grant Accessibility and Screen Recording on first open.
+
 ## Build and install
 
 Requires Xcode 26 and macOS 26. There are no prebuilt releases.

@@ -127,12 +127,12 @@ Trincano $VERSION
 
 Gerenciador da barra de menus do macOS, fork do Ice (https://github.com/jordanbaird/Ice),
 de Jordan Baird, licenciado sob a GNU GPL v3 (arquivo LICENSE neste disco).
-Trincano: https://github.com/PiluVitu/trincano. Código-fonte aberto, mesma licença.
+Trincano: https://github.com/PiluTech/trincano. Código-fonte aberto, mesma licença.
 
 Para instalar, arraste o Trincano para a pasta Applications.
 Sem telemetria e sem acesso à rede.
 
-Código-fonte desta versão (GPL): https://github.com/PiluVitu/trincano
+Código-fonte desta versão (GPL): https://github.com/PiluTech/trincano
 Commit: $COMMIT ($TAGINFO)
 
 Permissões: ao instalar o Trincano pela primeira vez (ou trocando a assinatura), conceda
