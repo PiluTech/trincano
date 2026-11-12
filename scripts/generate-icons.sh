@@ -2,7 +2,7 @@
 # Gera os PNGs do ícone do app e dos glifos da barra de menus a partir dos SVG em
 # docs/identidade/icone/ e registra o SHA-256 dos PNGs do app em docs/identidade/icone/SHA256SUMS
 # (o IconAssetsTests confere esse registro, a cor e a ausência de arquivos órfãos).
-# Requer: qlmanage (ícone do app), sips e swift (já vêm no macOS / Xcode).
+# Requer: qlmanage (ícone do app) e swift (já vêm no macOS / Xcode).
 set -euo pipefail
 cd "${0:A:h}/.."
 SRC=docs/identidade/icone
@@ -11,15 +11,18 @@ ICONSET=$ASSETS/AppIcon.appiconset
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
-# Ícone do app: 1024 base, reduzido para cada tamanho do .appiconset.
-qlmanage -t -s 1024 -o "$TMP" "$SRC/opcao2-app.svg" >/dev/null 2>&1
-BASE="$TMP/opcao2-app.svg.png"
-[[ -f "$BASE" ]] || { echo "falha ao renderizar o SVG do app"; exit 1; }
+# Ícone do app: cada tamanho é renderizado direto do SVG (nunca reamostrando um PNG).
 typeset -A SIZES
 SIZES=(icon_16x16 16 icon_16x16@2x 32 icon_32x32 32 icon_32x32@2x 64 icon_128x128 128
        icon_128x128@2x 256 icon_256x256 256 icon_256x256@2x 512 icon_512x512 512 icon_512x512@2x 1024)
+APP_SVG="$SRC/app-barra-congelada.svg"
+for px in ${(u)SIZES}; do
+  mkdir -p "$TMP/$px"
+  qlmanage -t -s "$px" -o "$TMP/$px" "$APP_SVG" >/dev/null 2>&1
+  [[ -f "$TMP/$px/app-barra-congelada.svg.png" ]] || { echo "falha ao renderizar o SVG do app em ${px}px"; exit 1; }
+done
 for name px in "${(@kv)SIZES}"; do
-  sips -z "$px" "$px" "$BASE" --out "$ICONSET/$name.png" >/dev/null
+  cp "$TMP/$px/app-barra-congelada.svg.png" "$ICONSET/$name.png"
 done
 
 # Glifos da barra de menus: 18/36/54 px (@1x/@2x/@3x), templates.
