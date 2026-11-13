@@ -34,6 +34,7 @@ Segurança e distribuição
 3b. **0.13.0 (Sparkle, .dmg arrumado, Mover para Aplicativos)**: ver `atualizacao.md`. Pendente do Paulo: OK do texto público (`PRODUTO.md`, política de privacidade) e criar o cask com `auto_updates true`; validar ao vivo a janela de atualização (precisa de um release publicado) e o alerta de mover.
 
 Visual e acessibilidade
+4b. **Localização incompleta**: a janela de permissões e o resto da UI estão só em inglês na prática. A localização pt-BR/en/es (skill `padroes-produto-pilutech`) entra na auditoria: varrer todo texto da interface, completar o String Catalog e checar cada tela nos três idiomas.
 4. **Ícone**: no macOS 26 o ícone PNG aparece numa **placa branca**; fazer o `.icon` no Icon Composer (GUI). Reprodutibilidade do gerador (`qlmanage`/`sips` mudam entre versões do macOS).
 5. **VoiceOver**: ações de mover itens no editor de layout (hoje o item é só lido); validar PT-BR e VoiceOver ao vivo.
 6. `IceBarColorManager` só atualiza a cor quando a tela é a principal (ruim com monitor externo).
@@ -43,6 +44,7 @@ Multi-monitor
 8. UUID de display ausente exclui a tela da topologia; UUID duplicado duplica a identidade na UI (usar ID de runtime + política).
 
 Qualidade e testes
+8b. **Build local com bundle id de desenvolvimento** (ex.: `br.com.pilutech.trincano.dev`): hoje `scripts/build.sh` usa o id de produção, e o `install.sh` só impede sobrescrever a release (incidente de 12/11/2026: build local sobre a release derrubou o app no dyld e invalidou o TCC). Criar o modo de build `.dev` (id, nome e XPC próprios; conferir `XPCPeerPolicy`, que casa pelo signing-identifier) para testar sem tocar na release nem nas permissões.
 9. **Integração com o app real**: `MenuBarSection`/`HIDEventManager`/`DisplayTopologyMonitor` só têm testes nas peças puras; falta teste de integração (abrir/fechar/trocar seção durante refresh lento, ação do notch não disparar os demais handlers, snapshot antigo do poll após troca de espaço).
 10. Teste que detecte mudança de executor/thread da captura e do timer se as flags do Swift mudarem; `AXHelpers.queue` concorrente (só leitura AX).
 11. Wakeups: comparação pareada sem uso para decidir sobre os timers de 5 s (causa não afirmada).
