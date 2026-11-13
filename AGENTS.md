@@ -21,6 +21,7 @@ O plano das 7 fases foi concluído (a fase 7, Swift 6, entrou pelo PR #12); veja
 - [docs/prints/README.md](docs/prints/README.md): prints do catálogo com fixture (modo de captura só Debug, `scripts/capture-prints.sh`).
 
 ## Comandos
+- **Onde roda o quê (regra do Paulo, repo público):** release, build de distribuição, assinatura/notarização, CI completo e testes demorados rodam no **GitHub Actions** (grátis em repo público; ver `docs/release.md`), não no Mac. No Mac fica só a validação rápida antes do push e o que exige a máquina (ícone, permissão, olho humano). Release local com `scripts/release.sh` só em emergência.
 - `scripts/check.sh`: swiftlint (`--strict`) + testes + build Release. O mesmo roda no GitHub Actions (`.github/workflows/ci.yml`, runner gratuito por ser repo público).
 - `scripts/build.sh [Release|Debug]`: build assinado (`SIGN_IDENTITY` para trocar o certificado). Saída em `build/`.
 - `scripts/release.sh`: build Release assinado com Developer ID (XPC e app, runtime reforçado, sem entitlements) + `.dmg` (LICENSE e crédito ao Ice) + `notarytool` + `stapler` + `spctl`; recusa versão `-dev`/árvore suja, grava commit/tag no .dmg e em `.source.txt`; saída em `build/release/`. Precisa de `NOTARY_KEY_ID`, `NOTARY_ISSUER` e `NOTARY_OP_REF` (chave `.p8` lida do 1Password para arquivo temporário 600, nunca no repo/log).
