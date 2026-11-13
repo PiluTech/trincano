@@ -5,7 +5,12 @@ require "xcodeproj"
 
 proj = Xcodeproj::Project.open("Ice.xcodeproj")
 # Idempotente: recria o alvo e os grupos para refletir os arquivos atuais.
-proj.targets.select { |t| t.name == "TrincanoTests" }.each(&:remove_from_project)
+proj.targets.select { |t| t.name == "TrincanoTests" }.each do |t|
+  # remove_from_project deixa as XCBuildConfiguration do alvo órfãs no pbxproj.
+  configs = t.build_configuration_list.build_configurations.dup
+  t.remove_from_project
+  configs.each(&:remove_from_project)
+end
 %w[Tests TestedSources].each { |n| proj.main_group[n]&.remove_from_project }
 
 target = proj.new_target(:unit_test_bundle, "TrincanoTests", :osx, "14.0")
