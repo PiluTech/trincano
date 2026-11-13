@@ -1,8 +1,9 @@
 #!/bin/zsh
 # Instala o build em /Applications/Trincano.app.
 # NUNCA sobrescreve uma release (Developer ID) com build local/ad-hoc, e recusa tudo que não consegue provar
-# (ver scripts/install-policy.sh). A troca é por rename com backup e restauração: o app nunca fica ausente
-# se a etapa final falhar. Nunca fecha o Ice, só avisa.
+# (ver scripts/install-policy.sh). A troca é por rename com backup e restauração: restaura em falha tratada;
+# há uma janela entre os dois renames e uma interrupção abrupta (queda de energia, kill) pode exigir recuperar
+# o backup em /Applications/.trincano-install.*/previous.app. Nunca fecha o Ice, só avisa.
 # Variáveis (teste em pasta temporária): TRINCANO_INSTALL_DIR (padrão /Applications; só no padrão o script
 # fecha e abre o app) e TRINCANO_INSTALL_SRC (padrão: o build de build/).
 set -euo pipefail
