@@ -58,6 +58,13 @@ struct PermissionsView: View {
         }
     }
 
+    /// Blue that passes WCAG AA (4.5:1) on both themes; see `ContrastPolicy`.
+    private static let highlightColor = Color(nsColor: NSColor(name: nil) { appearance in
+        let isDark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+        let c = ContrastPolicy.permissionsHighlight(isDark: isDark)
+        return NSColor(srgbRed: c.red, green: c.green, blue: c.blue, alpha: 1)
+    })
+
     @ViewBuilder
     private var explanationBox: some View {
         IceSection {
@@ -66,7 +73,7 @@ struct PermissionsView: View {
                     .fontWeight(.medium)
                 Text("Absolutely no personal information is collected or stored.")
                     .bold()
-                    .foregroundStyle(Color(red: 0.5, green: 0.75, blue: 1))
+                    .foregroundStyle(Self.highlightColor)
             }
             .padding()
         }
