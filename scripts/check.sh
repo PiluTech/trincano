@@ -9,3 +9,4 @@ scripts/build.sh Release
 scripts/extract-strings.py check
 swiftc -o build/check-icon-bundle scripts/check-icon-bundle.swift && build/check-icon-bundle build/Build/Products/Release/Trincano.app
 scripts/test-appcast.sh
+scripts/test-install.sh
