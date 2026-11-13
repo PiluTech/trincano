@@ -10,7 +10,7 @@ Limites desta auditoria: o que depende de olho humano, VoiceOver ao vivo e Acces
 | # | Achado | Severidade | Esforço |
 | --- | --- | --- | --- |
 | L1 | Sem espanhol (0 de 227 chaves) | Alta | G |
-| A1 | Contraste do texto azul da janela de Permissões (1,64 a 1,94:1 no tema claro) | Alta | P |
+| A1 | Contraste do texto azul da janela de Permissões (1,64 a 1,94:1 no tema claro) — **feito (#46)**: `#0B5CAD` no claro, `#80BFFF` no escuro, `ContrastPolicyTests` | Alta | P |
 | L2 | Idioma de origem do catálogo é en (a skill pede pt-BR) | Média | decisão |
 | L3 | Textos fixos fora do catálogo (ações do VoiceOver "left click"/"right click", alerta de migração) | Média | P |
 | L5 | Notas da versão do appcast só em pt-BR | Média | M |
@@ -95,7 +95,7 @@ Limites desta auditoria: o que depende de olho humano, VoiceOver ao vivo e Acces
 
 ## Acessibilidade
 
-### A1 — Contraste do texto azul das Permissões · Alta · P
+### A1 — Contraste do texto azul das Permissões · Alta · P · **FEITO (PR #46)**
 - **Onde:** `Ice/Permissions/PermissionsView.swift:69`, `.foregroundStyle(Color(red: 0.5, green: 0.75, blue: 1))` (`#80BFFF`) no texto "Absolutely no personal information is collected or stored." (negrito, `title3`).
 - **Medido:** `#80BFFF` sobre branco = **1,94:1**; sobre cinza claro `#ECECEC` = **1,64:1** (tema claro); sobre `#1E1E1E` = 8,59:1 e sobre `#323232` = 6,61:1 (tema escuro passa). Mesmo contado como "texto grande" (3:1) o tema claro falha.
 - **Como corrigir:** trocar por cor semântica (`.primary`/`.secondary`/`Color.accentColor`) ou por um par claro/escuro: `#0B5CAD` no tema claro dá 6,67:1 sobre branco e 5,64:1 sobre `#ECECEC`; manter o azul claro só no escuro. Teste que mede o par pelas cores resolvidas.
