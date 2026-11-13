@@ -14,7 +14,7 @@ Limites desta auditoria: o que depende de olho humano, VoiceOver ao vivo e Acces
 | L2 | Idioma de origem do catálogo é en (a skill pede pt-BR) | Média | decisão |
 | L3 | Textos fixos fora do catálogo (ações do VoiceOver "left click"/"right click", alerta de migração) | Média | P |
 | L5 | Notas da versão do appcast só em pt-BR | Média | M |
-| A2 | Alvos de clique abaixo de 24 e de 44 pt | Média | M |
+| A2 | Alvos de clique: 1 abaixo de 24 pt (SectionedList) e 4 entre 24 e 44 | Média | M |
 | A3 | Editor de layout sem alternativa por teclado e VoiceOver (só arrastar) | Média | G |
 | A4 | Janelas que abrem sozinhas (regra do app de barra de menus) | Média | M |
 | A5 | Tamanhos fixos e fontes fixas (zoom, Tamanho do texto do macOS) | Média | M |
@@ -37,7 +37,8 @@ Limites desta auditoria: o que depende de olho humano, VoiceOver ao vivo e Acces
 - **Nomes acessíveis já presentes:** ícones da barra (`ControlItem`: "Trincano", seção oculta e sempre oculta), itens da Barra do Trincano (rótulo + trait botão + ações), `DisplayMapView` (rótulo e estado selecionado), `HotkeyRecorder`, itens do editor de layout (`LayoutItemAccessibility`, testado), cabeçalhos de seção (`.isHeader`), decorativos escondidos do VoiceOver (8 usos de `accessibilityHidden`), dica de teclado do painel de busca ("setas navegam, Return clica…").
 - **Foco:** os controles customizados (slider, seletor de gradiente, `SectionedList`, `HotkeyRecorder`, editor de aparência, busca, `LayoutBar`) declaram `contentShape([.focusEffect, …])`, então o anel de foco do sistema acompanha a forma.
 - **Contraste do ícone novo** (medido): itens `#A9E8E3` sobre a barra `#0D3940` = 9,15:1; barra sobre o tile claro = 9,9 a 12,2:1; pingentes `#17939B` sobre o meio do tile = 3,28:1 (gráfico, mínimo 3:1).
-- **Janela não abre no boot:** `applicationDidFinishLaunching` não abre a janela de Ajustes; ela só abre por menu, atalho ou reabertura (`applicationShouldHandleReopen`). Lembretes de atualização do Sparkle são "gentis" (não roubam o foco).
+- **Ajustes não abrem no lançamento:** `applicationDidFinishLaunching` não abre a janela de Ajustes; ela só abre por menu, atalho ou reabertura (`applicationShouldHandleReopen`). Lembretes de atualização do Sparkle são "gentis" (não roubam o foco).
+- **O único `withAnimation` fora de `Motion` respeita "Reduzir movimento":** `NotchExtensionView.appearAnimation` vira `nil` com `Motion.reduceMotion` e usa `Motion.duration(.fade)` (150 a 300 ms).
 - **Sem rede nem telemetria**; textos públicos com OK do Paulo (regra mantida).
 
 ## Localização
@@ -101,7 +102,12 @@ Limites desta auditoria: o que depende de olho humano, VoiceOver ao vivo e Acces
 - **Esforço:** P.
 
 ### A2 — Alvos pequenos · Média · M
-- **Onde (menores que 24 pt, abaixo até do mínimo do WCAG 2.2):** `MenuBarSearchPanel.swift:467,604` (botões 18×18); `SectionedList.swift:231` (22×22); `MenuBarSearchPanel.swift:491` (22 de altura); `AdvancedSettingsPane.swift:158` (22). **Entre 24 e 44:** `HotkeyRecorder` (132×24), `IceGradientPicker` (200×24), `MenuBarShapePicker`/editor (24), `NotchExtensionView.swift:174` (30×28), controles do `GeneralSettingsPane` (15×15 no reset, com `.help`). Já cumprem: botões Sair/Continuar das Permissões (`controlSize(.large)`), linhas do Sobre (`minHeight: 44`).
+- **Onde (alvos reais, revisão do Crivo):**
+  - **Abaixo de 24 pt (falha até o mínimo do WCAG 2.2):** `SectionedList.swift:231` (22×22).
+  - **Entre 24 e 44 pt (cumpre o mínimo do WCAG, não os 44 da PiluTech):** `HotkeyRecorder` (132×24), `IceGradientPicker` (200×24), extensão do notch (`NotchExtensionView.swift:174`, 30×28) e os botões da barra inferior do painel de busca (`BottomBarButtonStyle`, `MenuBarSearchPanel.swift:491`: o `frame(height: 22)` é só do rótulo e o padding interno do botão leva o alvo efetivo a ~28×28 pt).
+  - **Fora da lista (não são alvos de clique):** `MenuBarSearchPanel.swift:467,604` são as teclas decorativas do rodapé (`ShortcutHint`, sem ação); `GeneralSettingsPane.swift:305` (15×15) é o `ProgressView` de "aplicando", não o botão de reset.
+  - **A validar no Accessibility Inspector:** o botão de reset do espaçamento (`GeneralSettingsPane.swift:~310`, borderless com ícone e `.help`) e o botão nativo de `AdvancedSettingsPane.swift:158` (`frame(height: 22)` em controle do sistema; não é falha até medir).
+  - **Já cumprem:** botões Sair/Continuar das Permissões (`controlSize(.large)`) e as linhas do Sobre (`minHeight: 44`).
 - **Como medir:** Accessibility Inspector (Inspeção, tamanho do frame) em cada painel; script de inventário dos `.frame`.
 - **Decisão pedida ao Paulo:** a skill pede 44 pt, mas o app roda com ponteiro em barra de menus densa (24 a 37 pt de altura). Proposta: **mínimo duro de 24 pt (WCAG 2.2, 2.5.8) em tudo**, com a exceção de espaçamento só onde documentada, e **44 pt** nos controles principais e em tudo que for novo.
 - **Esforço:** M.
