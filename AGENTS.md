@@ -2,6 +2,8 @@
 
 Fork do [Ice](https://github.com/jordanbaird/Ice) (jordanbaird, GPL-3.0) com suporte ao macOS 26 e foco em Macs com notch. Base: `upstream/macos-26`. Remoto `origin` = PiluTech/trincano (público), `upstream` = jordanbaird/Ice. PRs só contra a `main` do fork, nunca contra o upstream.
 
+Padrões: skill `padroes-produto-pilutech` (acessibilidade WCAG 2.2 AA, localização pt-BR/en/es, llms.txt nos sites). Auditoria inicial: [docs/auditoria-a11y-l10n.md](docs/auditoria-a11y-l10n.md). Todo PR informa a linha "A11y/l10n".
+
 ## Estado
 O plano das 7 fases foi concluído (a fase 7, Swift 6, entrou pelo PR #12); veja [docs/estado-atual.md](docs/estado-atual.md) (resumo, números de referência e a lista de **pendências abertas**). Distribuição fora da App Store: `.dmg` com Developer ID, notarizado e grampeado por `scripts/release.sh` (ver [docs/assinatura.md](docs/assinatura.md)); publicar no site exige OK do Paulo.
 
@@ -9,6 +11,7 @@ O plano das 7 fases foi concluído (a fase 7, Swift 6, entrou pelo PR #12); veja
 - [docs/estado-atual.md](docs/estado-atual.md): estado final, fases e PRs, pendências abertas.
 - [docs/plano-inicial.md](docs/plano-inicial.md): base, estado no Tahoe, dores do upstream, mapa de responsividade, notch, identidade, fases e perguntas.
 - [docs/decisoes.md](docs/decisoes.md): decisões da fase 1 (identidade, créditos GPL, importação do Ice, testes) e da 0.13.0 (Sparkle de volta, com consentimento).
+- [docs/auditoria-a11y-l10n.md](docs/auditoria-a11y-l10n.md): auditoria de acessibilidade e localização (achados, severidade, como medir/corrigir, esforço, o que já cumpre).
 - [docs/release.md](docs/release.md): CI e release pelo GitHub Actions (workflows, environment `release`, segredos com `op read | gh secret set`, pontos a validar).
 - [docs/atualizacao.md](docs/atualizacao.md): Sparkle (consentimento, chave EdDSA no 1Password, appcast, como fazer um release), .dmg arrumado e "Mover para Aplicativos".
 - [docs/assinatura.md](docs/assinatura.md): certificado local, troca pelo Developer ID, checagem do XPC.
