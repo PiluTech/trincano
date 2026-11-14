@@ -11,7 +11,7 @@ struct UpdateConfigurationTests {
     private static let root = URL(fileURLWithPath: #filePath)
         .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
 
-    /// Build number (`CFBundleVersion`) of the previous release, v0.13.0.
+    /// Build number (`CFBundleVersion`) of the previous release, v0.13.1.
     private static let previousBuild = 1131
 
     private func infoPlist() throws -> [String: Any] {
