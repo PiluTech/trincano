@@ -55,7 +55,7 @@ Limites desta auditoria: o que depende de olho humano, VoiceOver ao vivo e Acces
 - **Proposta:** manter **en como origem técnica** (chaves em inglês) e registrar a exceção à skill, mas tornar **pt-BR o fallback** (ver L4). Decidir com o Paulo.
 - **Esforço:** P para decidir e documentar; G se migrar a origem.
 
-### L3 — Textos fixos fora do catálogo · Média · P
+### L3 — Textos fixos fora do catálogo · Média · P · **FEITO**
 - **Onde:** `MenuBar/IceBar/IceBar.swift:523-524` (ações do VoiceOver `"left click"` e `"right click"`, em inglês fixo); `Utilities/Migration.swift:249` (alerta de migração, inglês, cita "Ice"; só aparece para quem vem de versões antigas do Ice); `ControlItem.swift:389` (`"|"` é símbolo, ok).
 - **Como medir:** busca por literais em `NSAlert`, `accessibilityAction(named:)`, `setAccessibility…` e `.title = "…"`; rodar com VoiceOver em pt-BR e abrir o rotor de ações de um item da Barra.
 - **Como corrigir:** `String(localized:)`/`Text("…")` com chave nova e tradução nos três idiomas; teste de que não há literal de interface nessas APIs.
