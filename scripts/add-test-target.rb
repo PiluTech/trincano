@@ -13,7 +13,13 @@ proj.targets.select { |t| t.name == "TrincanoTests" }.each do |t|
   configs.each(&:remove_from_project)
   build_files.each(&:remove_from_project)
 end
-%w[Tests TestedSources].each { |n| proj.main_group[n]&.remove_from_project }
+%w[Tests TestedSources].each do |n|
+  g = proj.main_group[n]
+  next unless g
+  # remove_from_project do grupo deixa os PBXFileReference filhos órfãos no pbxproj.
+  g.recursive_children.each(&:remove_from_project)
+  g.remove_from_project
+end
 
 target = proj.new_target(:unit_test_bundle, "TrincanoTests", :osx, "14.0")
 group = proj.main_group.new_group("Tests", "Tests")
