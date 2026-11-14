@@ -86,6 +86,9 @@ final class AppState: ObservableObject {
     ///   If `false`, prompts the user to grant permissions.
     func performSetup(hasPermissions: Bool) {
         if hasPermissions {
+            permissionsIndicator?.hide()
+            permissionsIndicator = nil
+            permissionsObserver = nil
             Task {
                 logger.debug("Setting up app state")
                 await setupTask.value
@@ -99,6 +102,50 @@ final class AppState: ObservableObject {
                 dismissWindow(.settings) // Shouldn't be open anyway.
                 openWindow(.permissions)
             }
+        }
+    }
+
+    private static let permissionsPromptedKey = "PermissionsWindowPrompted"
+
+    /// Menu bar indicator that stands in for the Permissions window after the first launch.
+    private var permissionsIndicator: PermissionsIndicator?
+
+    /// Watches the permissions while the indicator is shown.
+    private var permissionsObserver: AnyCancellable?
+
+    /// Handles missing permissions at launch: the window opens by itself only the
+    /// first time; later launches show an indicator the user can click.
+    func promptForPermissionsAtLaunch() {
+        let defaults = UserDefaults.standard
+        let prompt = LaunchWindowPolicy.permissionsPromptAtLaunch(
+            permissionsMissing: true,
+            promptedBefore: defaults.bool(forKey: Self.permissionsPromptedKey)
+        )
+        switch prompt {
+        case .openWindow:
+            defaults.set(true, forKey: Self.permissionsPromptedKey)
+            performSetup(hasPermissions: false)
+        case .showIndicator:
+            let indicator = permissionsIndicator ?? PermissionsIndicator { [weak self] in
+                self?.performSetup(hasPermissions: false)
+            }
+            permissionsIndicator = indicator
+            indicator.show()
+            // Granted straight in System Settings: finish setup, no click needed.
+            permissionsObserver = permissions.$permissionsState
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] state in
+                    guard let self, LaunchWindowPolicy.shouldFinishSetup(
+                        indicatorShown: permissionsIndicator != nil,
+                        permissionsMissing: state == .missing
+                    ) else {
+                        return
+                    }
+                    permissionsObserver = nil
+                    performSetup(hasPermissions: true)
+                }
+        case .none:
+            break
         }
     }
 
