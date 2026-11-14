@@ -101,7 +101,7 @@ Limites desta auditoria: o que depende de olho humano, VoiceOver ao vivo e Acces
 - **Como corrigir:** trocar por cor semântica (`.primary`/`.secondary`/`Color.accentColor`) ou por um par claro/escuro: `#0B5CAD` no tema claro dá 6,67:1 sobre branco e 5,64:1 sobre `#ECECEC`; manter o azul claro só no escuro. Teste que mede o par pelas cores resolvidas.
 - **Esforço:** P.
 
-### A2 — Alvos pequenos · Média · M
+### A2 — Alvos pequenos · Média · M · **FEITO (piso de 24 pt; 44 só nos principais/novos, ver `TargetSize`)**
 - **Onde (alvos reais, revisão do Crivo):**
   - **Abaixo de 24 pt (falha até o mínimo do WCAG 2.2):** `SectionedList.swift:231` (22×22).
   - **Entre 24 e 44 pt (cumpre o mínimo do WCAG, não os 44 da PiluTech):** `HotkeyRecorder` (132×24), `IceGradientPicker` (200×24), extensão do notch (`NotchExtensionView.swift:174`, 30×28) e os botões da barra inferior do painel de busca (`BottomBarButtonStyle`, `MenuBarSearchPanel.swift:491`: o `frame(height: 22)` é só do rótulo e o padding interno do botão leva o alvo efetivo a ~28×28 pt).

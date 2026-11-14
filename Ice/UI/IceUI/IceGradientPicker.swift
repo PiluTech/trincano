@@ -106,7 +106,7 @@ private struct IceGradientPickerRoot: View {
                 }
                 .padding(.horizontal, handleWidth / 2)
             }
-            .frame(width: 200, height: 24)
+            .frame(width: TargetSize.gradientPicker.width, height: TargetSize.gradientPicker.height)
             .shadow(radius: 2)
             .onTapGesture(count: 2) {
                 distributeStops()

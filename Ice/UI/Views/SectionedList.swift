@@ -228,7 +228,7 @@ private struct SectionedListItemView<ItemID: Hashable>: View {
             item.content
                 .foregroundStyle(foregroundStyle)
         }
-        .frame(minWidth: 22, minHeight: 22)
+        .frame(minWidth: TargetSize.sectionedListItem.width, minHeight: TargetSize.sectionedListItem.height)
         .contentShape([.focusEffect, .interaction], borderShape)
         .onHover { hovering in
             isHovering = hovering

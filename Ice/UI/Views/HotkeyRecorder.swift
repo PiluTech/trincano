@@ -40,7 +40,7 @@ struct HotkeyRecorder<Label: View>: View {
             leadingSegment
             trailingSegment
         }
-        .frame(width: 132, height: 24)
+        .frame(width: TargetSize.hotkeyRecorder.width, height: TargetSize.hotkeyRecorder.height)
     }
 
     @ViewBuilder
