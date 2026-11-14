@@ -118,7 +118,7 @@ Limites desta auditoria: o que depende de olho humano, VoiceOver ao vivo e Acces
 - **Como corrigir:** `accessibilityAction(named:)` "Mover para Visível/Oculto/Sempre oculto" em cada item, mais comandos de teclado (setas e Return) no editor; anunciar o resultado (`polite`, só porque a pessoa agiu).
 - **Esforço:** G.
 
-### A4 — Janelas que abrem sozinhas · Média · M
+### A4 — Janelas que abrem sozinhas · Média · M · **itens 1 e 2 FEITOS (A4a)**; 3 e 4 pendentes (A4b)
 Regra do Paulo (12/11): app de barra de menus não abre janela sozinho, só quando a pessoa pede ou no primeiro uso, e nada de `activate(ignoringOtherApps:)` sem ação da pessoa.
 - **Onde:**
   1. `AppMover.offerIfNeeded()` no lançamento, com `NSApp.activate(ignoringOtherApps: true)` e modal, a cada abertura fora de `/Applications` até a pessoa dizer "Agora não" (`Main/AppMover.swift:32`).

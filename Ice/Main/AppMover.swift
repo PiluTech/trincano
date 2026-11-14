@@ -29,6 +29,10 @@ enum AppMover {
             return
         }
 
+        // First use only (audit A4): record the offer before showing it, so a
+        // later launch never asks again, whatever the answer.
+        UserDefaults.standard.set(true, forKey: declinedKey)
+
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
         alert.messageText = String(localized: "Move Trincano to the Applications folder?")
@@ -39,7 +43,6 @@ enum AppMover {
         alert.addButton(withTitle: String(localized: "Not Now"))
 
         guard alert.runModal() == .alertFirstButtonReturn else {
-            UserDefaults.standard.set(true, forKey: declinedKey)
             return
         }
 

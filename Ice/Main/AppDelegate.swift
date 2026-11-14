@@ -65,13 +65,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             appState.performSetup(hasPermissions: true)
         case .missing:
             appState.permissions.logger.debug("Failed required permissions checks")
-            appState.performSetup(hasPermissions: false)
+            appState.promptForPermissionsAtLaunch()
         }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
         Logger.default.debug("Handling reopen")
-        openSettingsWindow()
+        if appState.permissions.permissionsState == .missing {
+            // The user asked (Dock/Finder), so the window may open.
+            appState.performSetup(hasPermissions: false)
+        } else {
+            openSettingsWindow()
+        }
         return true
     }
 
