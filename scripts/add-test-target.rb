@@ -8,8 +8,10 @@ proj = Xcodeproj::Project.open("Ice.xcodeproj")
 proj.targets.select { |t| t.name == "TrincanoTests" }.each do |t|
   # remove_from_project deixa as XCBuildConfiguration do alvo órfãs no pbxproj.
   configs = t.build_configuration_list.build_configurations.dup
+  build_files = (t.source_build_phase.files + t.frameworks_build_phase.files).dup
   t.remove_from_project
   configs.each(&:remove_from_project)
+  build_files.each(&:remove_from_project)
 end
 %w[Tests TestedSources].each { |n| proj.main_group[n]&.remove_from_project }
 

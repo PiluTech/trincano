@@ -1076,6 +1076,23 @@
         }
       }
     },
+    "Due to a bug in a previous version of the app, the data for Ice’s menu bar sections was corrupted and had to be reset.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Due to a bug in a previous version of the app, the data for Ice’s menu bar sections was corrupted and had to be reset."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por causa de um erro em uma versão anterior do app, os dados das seções da barra de menus do Ice foram corrompidos e precisaram ser redefinidos."
+          }
+        }
+      }
+    },
     "Dynamic": {
       "extractionState": "manual",
       "localizations": {
@@ -1684,6 +1701,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ponta inicial"
+          }
+        }
+      }
+    },
+    "Left click": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Left click"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clique esquerdo"
           }
         }
       }
@@ -2602,6 +2636,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Restaurar o espaçamento padrão"
+          }
+        }
+      }
+    },
+    "Right click": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right click"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clique direito"
           }
         }
       }
@@ -3854,23 +3905,6 @@
         }
       }
     },
-    "left click": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "left click"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "clique esquerdo"
-          }
-        }
-      }
-    },
     "macOS prohibits \"%@\" from being moved.": {
       "extractionState": "manual",
       "localizations": {
@@ -3918,23 +3952,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "nenhum"
-          }
-        }
-      }
-    },
-    "right click": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "right click"
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "clique direito"
           }
         }
       }
