@@ -23,4 +23,10 @@ enum LaunchWindowPolicy {
         }
         return promptedBefore ? .showIndicator : .openWindow
     }
+
+    /// Whether setup should now run on its own: the indicator is up and the person
+    /// granted the permissions straight in System Settings (no click needed).
+    static func shouldFinishSetup(indicatorShown: Bool, permissionsMissing: Bool) -> Bool {
+        indicatorShown && !permissionsMissing
+    }
 }

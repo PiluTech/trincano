@@ -88,6 +88,7 @@ final class AppState: ObservableObject {
         if hasPermissions {
             permissionsIndicator?.hide()
             permissionsIndicator = nil
+            permissionsObserver = nil
             Task {
                 logger.debug("Setting up app state")
                 await setupTask.value
@@ -109,6 +110,9 @@ final class AppState: ObservableObject {
     /// Menu bar indicator that stands in for the Permissions window after the first launch.
     private var permissionsIndicator: PermissionsIndicator?
 
+    /// Watches the permissions while the indicator is shown.
+    private var permissionsObserver: AnyCancellable?
+
     /// Handles missing permissions at launch: the window opens by itself only the
     /// first time; later launches show an indicator the user can click.
     func promptForPermissionsAtLaunch() {
@@ -127,6 +131,19 @@ final class AppState: ObservableObject {
             }
             permissionsIndicator = indicator
             indicator.show()
+            // Granted straight in System Settings: finish setup, no click needed.
+            permissionsObserver = permissions.$permissionsState
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] state in
+                    guard let self, LaunchWindowPolicy.shouldFinishSetup(
+                        indicatorShown: permissionsIndicator != nil,
+                        permissionsMissing: state == .missing
+                    ) else {
+                        return
+                    }
+                    permissionsObserver = nil
+                    performSetup(hasPermissions: true)
+                }
         case .none:
             break
         }

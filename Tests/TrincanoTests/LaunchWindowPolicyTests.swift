@@ -19,4 +19,10 @@ struct LaunchWindowPolicyTests {
         #expect(LaunchWindowPolicy.permissionsPromptAtLaunch(permissionsMissing: false, promptedBefore: false) == .none)
         #expect(LaunchWindowPolicy.permissionsPromptAtLaunch(permissionsMissing: false, promptedBefore: true) == .none)
     }
+
+    @Test func setupFinishesWhenPermissionsAreGrantedWhileTheIndicatorIsShown() {
+        #expect(LaunchWindowPolicy.shouldFinishSetup(indicatorShown: true, permissionsMissing: false))
+        #expect(!LaunchWindowPolicy.shouldFinishSetup(indicatorShown: true, permissionsMissing: true))
+        #expect(!LaunchWindowPolicy.shouldFinishSetup(indicatorShown: false, permissionsMissing: false))
+    }
 }
