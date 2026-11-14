@@ -155,7 +155,7 @@ struct AdvancedSettingsPane: View {
             } label: {
                 Text(permission.title)
             }
-            .frame(height: 22)
+            .frame(height: TargetSize.advancedPermissionRowHeight)
         }
     }
 }

@@ -488,9 +488,9 @@ private struct BottomBarButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .frame(height: 22)
-            .frame(minWidth: 22)
-            .padding(3)
+            .frame(height: TargetSize.bottomBarButtonLabel.height)
+            .frame(minWidth: TargetSize.bottomBarButtonLabel.width)
+            .padding(TargetSize.bottomBarButtonPadding)
             .background {
                 borderShape
                     .fill(.regularMaterial)

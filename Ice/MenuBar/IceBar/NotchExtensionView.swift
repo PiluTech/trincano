@@ -171,7 +171,7 @@ struct NotchExtensionContentView: View {
                         item: item,
                         section: section
                     )
-                    .frame(minWidth: 30, minHeight: 28)
+                    .frame(minWidth: TargetSize.notchExtensionButton.width, minHeight: TargetSize.notchExtensionButton.height)
                 }
             }
         }
