@@ -12,7 +12,7 @@ struct UpdateConfigurationTests {
         .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
 
     /// Build number (`CFBundleVersion`) of the previous release, v0.13.0.
-    private static let previousBuild = 1130
+    private static let previousBuild = 1131
 
     private func infoPlist() throws -> [String: Any] {
         let data = try Data(contentsOf: Self.root.appendingPathComponent("Ice/Resources/Info.plist"))
@@ -73,6 +73,6 @@ struct UpdateConfigurationTests {
     }
 
     @Test func marketingVersionIsTheNextRelease() throws {
-        #expect(try projectValues(for: "MARKETING_VERSION").contains("0.13.1"))
+        #expect(try projectValues(for: "MARKETING_VERSION").contains("0.13.2"))
     }
 }
